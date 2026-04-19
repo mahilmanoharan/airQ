@@ -36,5 +36,5 @@ func fetchAQ() async throws -> airquality{
         throw ErrorType.unknown
     }
     
-    //testing git ignore 
+    //testing it again why is it not working....
 }
