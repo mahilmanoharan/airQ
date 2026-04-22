@@ -6,6 +6,7 @@ struct DashboardView: View {
     // MARK: - Properties
     
     @State private var vm = DashboardViewModel()
+
     
     // MARK: - Body
     
@@ -126,7 +127,7 @@ struct DashboardView: View {
             }
             
             VStack(spacing: 8) {
-                Text("Analysis")
+                Text("AQI analysis")
                     .font(.title3)
                     .fontWeight(.semibold)
                 
@@ -141,6 +142,31 @@ struct DashboardView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(aqiColor(for: data.data.aqi).opacity(0.1))
             )
+            
+            
+            if let pollenData = pollen, let firstDatum = pollenData.data.first {
+                let totalPollen = firstDatum.count.grassPollen +
+                firstDatum.count.treePollen +
+                firstDatum.count.weedPollen
+                
+                VStack(spacing: 8) {
+                    Text("Pollen analysis")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                    
+                    Text(pollenGuidance(for: totalPollen))
+                        .font(.body)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(pollenColor(for: totalPollen).opacity(0.1))
+                )
+            }
+            
             
             Spacer()
         }
@@ -236,6 +262,19 @@ struct DashboardView: View {
     }
     
     // MARK: - Pollen Helper Methods
+    
+    private func pollenGuidance(for count: Int) -> String {
+        switch count {
+        case 0...14:
+            return "Pollen levels are low to none, run free!"
+        case 15...89:
+            return "Medium pollen leves. Wear mask if sensitive, otherwise proceed with caution"
+        case 90...1499:
+            return "High pollen levels. Definitely wear a mask and proceed with extreme caution or any necessary measures."
+        default:
+            return "Health warning of emergency conditions. Everyone should avoid all outdoor physical activity."
+        }
+    }
     
     private func pollenColor(for count: Int) -> Color {
         switch count {
