@@ -92,6 +92,7 @@ struct DashboardView: View {
                 )
                 
                 // Pollen Index Card
+                
                 if let pollenData = pollen, let firstDatum = pollenData.data.first {
                     let totalPollen = firstDatum.count.grassPollen + 
                                      firstDatum.count.treePollen + 

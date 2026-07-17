@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "swiftui-skills@swift-ios-skills": true,
+    "swift-core-skills@swift-ios-skills": true,
+    "ios-engineering-skills@swift-ios-skills": true
+  }
+}
