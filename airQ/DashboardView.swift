@@ -58,7 +58,7 @@ struct DashboardView: View {
             Spacer()
 
             VStack(spacing: 8) {
-                Text(data.data.city.name)
+                Text(vm.cityName ?? data.data.city.name)
                     .font(.title2)
                     .fontWeight(.semibold)
 
