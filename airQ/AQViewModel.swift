@@ -1,6 +1,8 @@
 import Foundation
 import Observation
 import CoreLocation
+import WidgetKit
+import AirQualityKit
 
 // MARK: - View State
 
@@ -29,10 +31,8 @@ class DashboardViewModel {
         
         Task {
             try? await Task.sleep(for: .seconds(3))
-            if locationManager.location == nil {
-                state = .error("Location not found")
-            } else {
-            }
+            guard locationManager.location == nil else { return }
+            state = .error("Location not found")
         }
     }
     
@@ -45,11 +45,23 @@ class DashboardViewModel {
         do {
             let airQuality = try await airQualityTask
             let pollen = try? await pollenTask
-            
+
             state = .loaded(airQuality, pollen)
+            updateWidgetSnapshot(with: airQuality)
         } catch {
             state = .error(error.localizedDescription)
         }
+    }
+
+    private func updateWidgetSnapshot(with airQuality: AirQuality) {
+        let locationName = airQuality.data.city.name.isEmpty ? "Current Location" : airQuality.data.city.name
+        let snapshot = AQSnapshot(
+            aqi: airQuality.data.aqi,
+            locationName: locationName,
+            lastUpdated: Date()
+        )
+        WidgetDataStore.save(snapshot)
+        WidgetCenter.shared.reloadTimelines(ofKind: "airQWidget")
     }
 }
 

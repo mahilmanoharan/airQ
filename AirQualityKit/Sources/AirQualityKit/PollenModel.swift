@@ -1,19 +1,19 @@
 import Foundation
 
 // MARK: - Pollen
-struct Pollen: Codable {
-    let message: String
-    let lat, lng: Double
-    let data: [Datum]
+public struct Pollen: Codable, Sendable {
+    public let message: String
+    public let lat, lng: Double
+    public let data: [Datum]
 }
 
 // MARK: - Datum
-struct Datum: Codable {
-    let timezone: String
-    let species: Species
-    let risk: Risk
-    let count: Count
-    let updatedAt: String
+public struct Datum: Codable, Sendable {
+    public let timezone: String
+    public let species: Species
+    public let risk: Risk
+    public let count: Count
+    public let updatedAt: String
 
     enum CodingKeys: String, CodingKey {
         case timezone
@@ -25,8 +25,8 @@ struct Datum: Codable {
 }
 
 // MARK: - Count
-struct Count: Codable {
-    let grassPollen, treePollen, weedPollen: Int
+public struct Count: Codable, Sendable {
+    public let grassPollen, treePollen, weedPollen: Int
 
     enum CodingKeys: String, CodingKey {
         case grassPollen = "grass_pollen"
@@ -36,8 +36,8 @@ struct Count: Codable {
 }
 
 // MARK: - Risk
-struct Risk: Codable {
-    let grassPollen, treePollen, weedPollen: String
+public struct Risk: Codable, Sendable {
+    public let grassPollen, treePollen, weedPollen: String
 
     enum CodingKeys: String, CodingKey {
         case grassPollen = "grass_pollen"
@@ -47,11 +47,11 @@ struct Risk: Codable {
 }
 
 // MARK: - Species
-struct Species: Codable {
-    let grass: Grass
-    let others: Int
-    let tree: Tree
-    let weed: Weed
+public struct Species: Codable, Sendable {
+    public let grass: Grass
+    public let others: Int
+    public let tree: Tree
+    public let weed: Weed
 
     enum CodingKeys: String, CodingKey {
         case grass = "Grass"
@@ -62,8 +62,8 @@ struct Species: Codable {
 }
 
 // MARK: - Grass
-struct Grass: Codable {
-    let grassPoaceae: Int
+public struct Grass: Codable, Sendable {
+    public let grassPoaceae: Int
 
     enum CodingKeys: String, CodingKey {
         case grassPoaceae = "Grass / Poaceae"
@@ -71,9 +71,9 @@ struct Grass: Codable {
 }
 
 // MARK: - Tree
-struct Tree: Codable {
-    let ash, birch, elm, maple: Int
-    let mulberry, oak, pine, poplar: Int
+public struct Tree: Codable, Sendable {
+    public let ash, birch, elm, maple: Int
+    public let mulberry, oak, pine, poplar: Int
 
     enum CodingKeys: String, CodingKey {
         case ash = "Ash"
@@ -88,12 +88,10 @@ struct Tree: Codable {
 }
 
 // MARK: - Weed
-struct Weed: Codable {
-    let ragweed: Int
+public struct Weed: Codable, Sendable {
+    public let ragweed: Int
 
     enum CodingKeys: String, CodingKey {
         case ragweed = "Ragweed"
     }
 }
-
-

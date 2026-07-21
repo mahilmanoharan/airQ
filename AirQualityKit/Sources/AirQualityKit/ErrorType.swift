@@ -1,12 +1,12 @@
 import Foundation
 
-
-enum ErrorType: LocalizedError {
+public enum ErrorType: LocalizedError {
     case networkError
     case codingError
     case invalidURL
     case unknown
-    var errorDescription: String? {
+
+    public var errorDescription: String? {
         switch self {
         case .networkError:
             return "A network error occurred. Please check your connection."

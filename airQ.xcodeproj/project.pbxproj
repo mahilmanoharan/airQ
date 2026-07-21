@@ -6,11 +6,67 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A4BC4D43300C81D70092EF51 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4BC4D42300C81D70092EF51 /* WidgetKit.framework */; };
+		A4BC4D45300C81D70092EF51 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4BC4D44300C81D70092EF51 /* SwiftUI.framework */; };
+		A4BC4D56300C81D80092EF51 /* airQWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A4BC4D40300C81D70092EF51 /* airQWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A4BC4D5E300C847C0092EF51 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4BC4D42300C81D70092EF51 /* WidgetKit.framework */; };
+		A4BC4D5F300C848A0092EF51 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4BC4D42300C81D70092EF51 /* WidgetKit.framework */; };
+		A4BC4D62300C85660092EF51 /* AirQualityKit in Frameworks */ = {isa = PBXBuildFile; productRef = A4BC4D61300C85660092EF51 /* AirQualityKit */; };
+		A4BC4D64300C857D0092EF51 /* AirQualityKit in Frameworks */ = {isa = PBXBuildFile; productRef = A4BC4D63300C857D0092EF51 /* AirQualityKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A4BC4D54300C81D80092EF51 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A4D584432F8BD9CE00BA325D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A4BC4D3F300C81D70092EF51;
+			remoteInfo = airQWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A4BC4D5B300C81D80092EF51 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A4BC4D56300C81D80092EF51 /* airQWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		A4BC4D40300C81D70092EF51 /* airQWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = airQWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4BC4D42300C81D70092EF51 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		A4BC4D44300C81D70092EF51 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		A4BC4D5C300C82190092EF51 /* airQWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = airQWidgetExtension.entitlements; sourceTree = "<group>"; };
 		A4D5844B2F8BD9CE00BA325D /* airQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = airQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A4BC4D57300C81D80092EF51 /* Exceptions for "airQWidget" folder in "airQWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A4BC4D3F300C81D70092EF51 /* airQWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		A4BC4D46300C81D70092EF51 /* airQWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A4BC4D57300C81D80092EF51 /* Exceptions for "airQWidget" folder in "airQWidgetExtension" target */,
+			);
+			path = airQWidget;
+			sourceTree = "<group>";
+		};
 		A4D5844D2F8BD9CE00BA325D /* airQ */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = airQ;
@@ -19,20 +75,45 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A4BC4D3D300C81D70092EF51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A4BC4D45300C81D70092EF51 /* SwiftUI.framework in Frameworks */,
+				A4BC4D43300C81D70092EF51 /* WidgetKit.framework in Frameworks */,
+				A4BC4D64300C857D0092EF51 /* AirQualityKit in Frameworks */,
+				A4BC4D5E300C847C0092EF51 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4D584482F8BD9CE00BA325D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A4BC4D62300C85660092EF51 /* AirQualityKit in Frameworks */,
+				A4BC4D5F300C848A0092EF51 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A4BC4D41300C81D70092EF51 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A4BC4D42300C81D70092EF51 /* WidgetKit.framework */,
+				A4BC4D44300C81D70092EF51 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		A4D584422F8BD9CE00BA325D = {
 			isa = PBXGroup;
 			children = (
+				A4BC4D5C300C82190092EF51 /* airQWidgetExtension.entitlements */,
 				A4D5844D2F8BD9CE00BA325D /* airQ */,
+				A4BC4D46300C81D70092EF51 /* airQWidget */,
+				A4BC4D41300C81D70092EF51 /* Frameworks */,
 				A4D5844C2F8BD9CE00BA325D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +122,7 @@
 			isa = PBXGroup;
 			children = (
 				A4D5844B2F8BD9CE00BA325D /* airQ.app */,
+				A4BC4D40300C81D70092EF51 /* airQWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +130,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A4BC4D3F300C81D70092EF51 /* airQWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A4BC4D58300C81D80092EF51 /* Build configuration list for PBXNativeTarget "airQWidgetExtension" */;
+			buildPhases = (
+				A4BC4D3C300C81D70092EF51 /* Sources */,
+				A4BC4D3D300C81D70092EF51 /* Frameworks */,
+				A4BC4D3E300C81D70092EF51 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A4BC4D46300C81D70092EF51 /* airQWidget */,
+			);
+			name = airQWidgetExtension;
+			packageProductDependencies = (
+				A4BC4D63300C857D0092EF51 /* AirQualityKit */,
+			);
+			productName = airQWidgetExtension;
+			productReference = A4BC4D40300C81D70092EF51 /* airQWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		A4D5844A2F8BD9CE00BA325D /* airQ */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A4D584562F8BD9CF00BA325D /* Build configuration list for PBXNativeTarget "airQ" */;
@@ -55,16 +160,19 @@
 				A4D584472F8BD9CE00BA325D /* Sources */,
 				A4D584482F8BD9CE00BA325D /* Frameworks */,
 				A4D584492F8BD9CE00BA325D /* Resources */,
+				A4BC4D5B300C81D80092EF51 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A4BC4D55300C81D80092EF51 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A4D5844D2F8BD9CE00BA325D /* airQ */,
 			);
 			name = airQ;
 			packageProductDependencies = (
+				A4BC4D61300C85660092EF51 /* AirQualityKit */,
 			);
 			productName = airQ;
 			productReference = A4D5844B2F8BD9CE00BA325D /* airQ.app */;
@@ -80,6 +188,9 @@
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					A4BC4D3F300C81D70092EF51 = {
+						CreatedOnToolsVersion = 26.4;
+					};
 					A4D5844A2F8BD9CE00BA325D = {
 						CreatedOnToolsVersion = 26.4;
 					};
@@ -94,17 +205,28 @@
 			);
 			mainGroup = A4D584422F8BD9CE00BA325D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A4BC4D60300C84ED0092EF51 /* XCLocalSwiftPackageReference "AirQualityKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A4D5844C2F8BD9CE00BA325D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				A4D5844A2F8BD9CE00BA325D /* airQ */,
+				A4BC4D3F300C81D70092EF51 /* airQWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A4BC4D3E300C81D70092EF51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4D584492F8BD9CE00BA325D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +237,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A4BC4D3C300C81D70092EF51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4D584472F8BD9CE00BA325D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +253,77 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		A4BC4D55300C81D80092EF51 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A4BC4D3F300C81D70092EF51 /* airQWidgetExtension */;
+			targetProxy = A4BC4D54300C81D80092EF51 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		A4BC4D59300C81D80092EF51 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = airQWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 656VZ34X6H;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = airQWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = airQWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mahilmanoharan.airQ.airQWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A4BC4D5A300C81D80092EF51 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = airQWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 656VZ34X6H;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = airQWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = airQWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mahilmanoharan.airQ.airQWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		A4D584542F8BD9CF00BA325D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -249,6 +448,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = airQ/airQ.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 656VZ34X6H;
@@ -285,6 +485,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = airQ/airQ.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 656VZ34X6H;
@@ -319,6 +520,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A4BC4D58300C81D80092EF51 /* Build configuration list for PBXNativeTarget "airQWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A4BC4D59300C81D80092EF51 /* Debug */,
+				A4BC4D5A300C81D80092EF51 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A4D584462F8BD9CE00BA325D /* Build configuration list for PBXProject "airQ" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -338,6 +548,26 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A4BC4D60300C84ED0092EF51 /* XCLocalSwiftPackageReference "AirQualityKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = AirQualityKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A4BC4D61300C85660092EF51 /* AirQualityKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A4BC4D60300C84ED0092EF51 /* XCLocalSwiftPackageReference "AirQualityKit" */;
+			productName = AirQualityKit;
+		};
+		A4BC4D63300C857D0092EF51 /* AirQualityKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A4BC4D60300C84ED0092EF51 /* XCLocalSwiftPackageReference "AirQualityKit" */;
+			productName = AirQualityKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A4D584432F8BD9CE00BA325D /* Project object */;
 }
