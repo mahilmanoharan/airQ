@@ -37,8 +37,8 @@ struct DashboardView: View {
         switch vm.state {
         case .loading:
             loadingView
-        case .loaded(let data, let pollen):
-            loadedView(data: data, pollen: pollen)
+        case .loaded(let snapshot):
+            loadedView(snapshot: snapshot)
         case .error(let message):
             errorView(message: message)
         }
@@ -53,49 +53,36 @@ struct DashboardView: View {
         }
     }
 
-    private func loadedView(data: AirQuality, pollen: Pollen?) -> some View {
+    private func loadedView(snapshot: AQSnapshot) -> some View {
         VStack(spacing: 24) {
             Spacer()
 
-            VStack(spacing: 8) {
-                Text(vm.cityName ?? data.data.city.name)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                if let location = data.data.city.location {
-                    Text(location)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Text(snapshot.locationName)
+                .font(.title2)
+                .fontWeight(.semibold)
 
             HStack(spacing: 32) {
-                AQICardView(aqi: data.data.aqi)
-
-                if let totalPollen = totalPollenCount(from: pollen) {
-                    PollenCardView(count: totalPollen)
-                }
+                AQICardView(aqi: snapshot.aqi)
+                PollenCardView(index: snapshot.pollenIndex)
             }
 
-            if let dominentpol = data.data.dominentpol {
-                Text("Primary Pollutant: \(dominentpol.uppercased())")
+            if let dominantPollutant = snapshot.dominantPollutant {
+                Text("Primary Pollutant: \(dominantPollutant.uppercased())")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             AnalysisCardView(
                 title: "AQI analysis",
-                message: AirQualityPresentation.guidance(for: data.data.aqi),
-                tintColor: AirQualityPresentation.color(for: data.data.aqi)
+                message: AirQualityPresentation.guidance(for: snapshot.aqi),
+                tintColor: AirQualityPresentation.color(for: snapshot.aqi)
             )
 
-            if let totalPollen = totalPollenCount(from: pollen) {
-                AnalysisCardView(
-                    title: "Pollen analysis",
-                    message: PollenPresentation.guidance(for: totalPollen),
-                    tintColor: PollenPresentation.color(for: totalPollen)
-                )
-            }
+            AnalysisCardView(
+                title: "Pollen analysis",
+                message: PollenPresentation.guidance(for: snapshot.pollenIndex),
+                tintColor: PollenPresentation.color(for: snapshot.pollenIndex)
+            )
 
             Spacer()
         }
@@ -132,16 +119,11 @@ struct DashboardView: View {
 
     private var backgroundColor: Color {
         switch vm.state {
-        case .loaded(let data, _):
-            return AirQualityPresentation.color(for: data.data.aqi).opacity(0.05)
+        case .loaded(let snapshot):
+            return AirQualityPresentation.color(for: snapshot.aqi).opacity(0.05)
         default:
             return Color(.systemBackground)
         }
-    }
-
-    private func totalPollenCount(from pollen: Pollen?) -> Int? {
-        guard let firstDatum = pollen?.data.first else { return nil }
-        return firstDatum.count.grassPollen + firstDatum.count.treePollen + firstDatum.count.weedPollen
     }
 
     private func errorMessage(_ message: String) -> String {

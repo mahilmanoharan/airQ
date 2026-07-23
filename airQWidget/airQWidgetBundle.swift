@@ -11,6 +11,8 @@ import SwiftUI
 @main
 struct airQWidgetBundle: WidgetBundle {
     var body: some Widget {
-        airQWidget()
+        AQIWidget()
+        PollenWidget()
+        CombinedWidget()
     }
 }

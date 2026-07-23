@@ -45,6 +45,7 @@
 		A4BC4D42300C81D70092EF51 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		A4BC4D44300C81D70092EF51 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A4BC4D5C300C82190092EF51 /* airQWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = airQWidgetExtension.entitlements; sourceTree = "<group>"; };
+		A4BC4D70300C90010092EF51 /* airQ/Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = airQ/Secrets.xcconfig; sourceTree = "<group>"; };
 		A4D5844B2F8BD9CE00BA325D /* airQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = airQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -111,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				A4BC4D5C300C82190092EF51 /* airQWidgetExtension.entitlements */,
+				A4BC4D70300C90010092EF51 /* airQ/Secrets.xcconfig */,
 				A4D5844D2F8BD9CE00BA325D /* airQ */,
 				A4BC4D46300C81D70092EF51 /* airQWidget */,
 				A4BC4D41300C81D70092EF51 /* Frameworks */,
@@ -445,6 +447,7 @@
 		};
 		A4D584572F8BD9CF00BA325D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A4BC4D70300C90010092EF51 /* airQ/Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -454,7 +457,7 @@
 				DEVELOPMENT_TEAM = 656VZ34X6H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = airQ/InfoPlistAdditions.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";
@@ -482,6 +485,7 @@
 		};
 		A4D584582F8BD9CF00BA325D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A4BC4D70300C90010092EF51 /* airQ/Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -491,7 +495,7 @@
 				DEVELOPMENT_TEAM = 656VZ34X6H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = airQ/InfoPlistAdditions.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";

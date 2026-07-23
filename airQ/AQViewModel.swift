@@ -8,7 +8,7 @@ import AirQualityKit
 
 enum ViewState {
     case loading
-    case loaded(AirQuality, Pollen?)
+    case loaded(AQSnapshot)
     case error(String)
 }
 
@@ -16,28 +16,32 @@ enum ViewState {
 
 @Observable
 class DashboardViewModel {
-    
+
     // MARK: - Properties
-    
+
     var state: ViewState = .loading
-    var cityName: String?
     let locationManager = LocationManager()
 
     // MARK: - Methods
-    
+
     func loadAirQuality() {
         state = .loading
-        
+
         locationManager.requestLocation()
-        
+
         Task {
             try? await Task.sleep(for: .seconds(3))
             guard locationManager.location == nil else { return }
             state = .error("Location not found")
         }
     }
-    
+
     func fetchAirQualityData(latitude: Double, longitude: Double) async {
+        if let cached = WidgetDataStore.loadLatest(), cached.isFresh() {
+            state = .loaded(cached)
+            return
+        }
+
         state = .loading
 
         async let airQualityTask = fetchAQ(latitude: latitude, longitude: longitude)
@@ -51,22 +55,20 @@ class DashboardViewModel {
             let pollen = try? await pollenTask
             let cityName = await cityNameTask
 
-            self.cityName = cityName
-            state = .loaded(airQuality, pollen)
-            updateWidgetSnapshot(with: airQuality, cityName: cityName)
+            let snapshot = AQSnapshot(
+                aqi: airQuality.data.aqi,
+                dominantPollutant: airQuality.data.dominentpol,
+                pollenIndex: pollen?.overallIndex ?? 0,
+                locationName: cityName ?? Self.fallbackLocationName(from: airQuality.data.city.name),
+                lastUpdated: Date()
+            )
+
+            state = .loaded(snapshot)
+            WidgetDataStore.save(snapshot)
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             state = .error(error.localizedDescription)
         }
-    }
-
-    private func updateWidgetSnapshot(with airQuality: AirQuality, cityName: String?) {
-        let snapshot = AQSnapshot(
-            aqi: airQuality.data.aqi,
-            locationName: cityName ?? Self.fallbackLocationName(from: airQuality.data.city.name),
-            lastUpdated: Date()
-        )
-        WidgetDataStore.save(snapshot)
-        WidgetCenter.shared.reloadTimelines(ofKind: "airQWidget")
     }
 
     /// Used only when reverse geocoding fails (offline, denied, no placemark) — takes the
@@ -77,4 +79,3 @@ class DashboardViewModel {
         return firstComponent.trimmingCharacters(in: .whitespaces)
     }
 }
-

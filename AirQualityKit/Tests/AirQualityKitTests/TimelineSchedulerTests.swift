@@ -9,13 +9,21 @@ struct TimelineSchedulerTests {
     func makeEntriesWithSnapshot() {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let updated = now.addingTimeInterval(-120)
-        let snapshot = AQSnapshot(aqi: 42, locationName: "San Francisco", lastUpdated: updated)
+        let snapshot = AQSnapshot(
+            aqi: 42,
+            dominantPollutant: "pm25",
+            pollenIndex: 3,
+            locationName: "San Francisco",
+            lastUpdated: updated
+        )
 
         let entries = TimelineScheduler.makeEntries(from: snapshot, currentDate: now)
 
         #expect(entries.count == 1)
         #expect(entries[0].date == now)
         #expect(entries[0].aqi == 42)
+        #expect(entries[0].dominantPollutant == "pm25")
+        #expect(entries[0].pollenIndex == 3)
         #expect(entries[0].locationName == "San Francisco")
         #expect(entries[0].lastUpdated == updated)
         #expect(entries[0].hasData == true)
@@ -29,6 +37,8 @@ struct TimelineSchedulerTests {
 
         #expect(entries.count == 1)
         #expect(entries[0].aqi == nil)
+        #expect(entries[0].dominantPollutant == nil)
+        #expect(entries[0].pollenIndex == nil)
         #expect(entries[0].locationName == "Current Location")
         #expect(entries[0].lastUpdated == nil)
         #expect(entries[0].hasData == false)
@@ -38,7 +48,13 @@ struct TimelineSchedulerTests {
     func makeEntriesWithStaleSnapshot() {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         let staleUpdate = now.addingTimeInterval(-60 * 60 * 6) // 6 hours old
-        let snapshot = AQSnapshot(aqi: 88, locationName: "Oakland", lastUpdated: staleUpdate)
+        let snapshot = AQSnapshot(
+            aqi: 88,
+            dominantPollutant: "o3",
+            pollenIndex: 1,
+            locationName: "Oakland",
+            lastUpdated: staleUpdate
+        )
 
         let entries = TimelineScheduler.makeEntries(from: snapshot, currentDate: now)
 
@@ -46,12 +62,44 @@ struct TimelineSchedulerTests {
         #expect(entries[0].lastUpdated == staleUpdate)
     }
 
-    @Test("Schedules the next refresh exactly 30 minutes later")
-    func nextRefreshDateIsThirtyMinutesLater() {
+    @Test("Schedules the next refresh exactly 60 minutes later")
+    func nextRefreshDateIsSixtyMinutesLater() {
         let now = Date(timeIntervalSince1970: 1_700_000_000)
 
         let next = TimelineScheduler.nextRefreshDate(after: now)
 
-        #expect(next.timeIntervalSince(now) == 30 * 60)
+        #expect(next.timeIntervalSince(now) == 60 * 60)
+    }
+}
+
+@Suite("AQSnapshot freshness")
+struct AQSnapshotFreshnessTests {
+
+    @Test("A snapshot updated 10 minutes ago is fresh within an hour")
+    func freshWithinInterval() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let snapshot = AQSnapshot(
+            aqi: 10,
+            dominantPollutant: nil,
+            pollenIndex: 0,
+            locationName: "Test",
+            lastUpdated: now.addingTimeInterval(-10 * 60)
+        )
+
+        #expect(snapshot.isFresh(asOf: now) == true)
+    }
+
+    @Test("A snapshot updated 90 minutes ago is not fresh within an hour")
+    func staleBeyondInterval() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let snapshot = AQSnapshot(
+            aqi: 10,
+            dominantPollutant: nil,
+            pollenIndex: 0,
+            locationName: "Test",
+            lastUpdated: now.addingTimeInterval(-90 * 60)
+        )
+
+        #expect(snapshot.isFresh(asOf: now) == false)
     }
 }

@@ -57,43 +57,56 @@ public enum AirQualityPresentation {
 
 // MARK: - Pollen Presentation
 
+/// Keyed on Google's Universal Pollen Index (0–5), not a raw grain count.
 public enum PollenPresentation {
-    public static func color(for count: Int) -> Color {
-        switch count {
-        case 0...14:
+    public static func color(for index: Int) -> Color {
+        switch index {
+        case 0:
             return .green
-        case 15...89:
+        case 1:
+            return .green
+        case 2:
+            return .yellow
+        case 3:
             return .orange
-        case 90...1499:
+        case 4:
             return .red
         default:
-            return .yellow
+            return .purple
         }
     }
 
-    public static func category(for count: Int) -> String {
-        switch count {
-        case 0...14:
+    public static func category(for index: Int) -> String {
+        switch index {
+        case 0:
+            return "None"
+        case 1:
+            return "Very Low"
+        case 2:
             return "Low"
-        case 15...89:
+        case 3:
             return "Moderate"
-        case 90...1499:
+        case 4:
             return "High"
         default:
             return "Very High"
         }
     }
 
-    public static func guidance(for count: Int) -> String {
-        switch count {
-        case 0...14:
-            return "Pollen levels are low to none, run free!"
-        case 15...89:
-            return "Medium pollen leves. Wear mask if sensitive, otherwise proceed with caution"
-        case 90...1499:
-            return "High pollen levels. Definitely wear a mask and proceed with extreme caution or any necessary measures."
+    public static func guidance(for index: Int) -> String {
+        switch index {
+        case 0:
+            return "No pollen detected today, run free!"
+        case 1:
+            return "Pollen levels are very low. Little to no risk for most people."
+        case 2:
+            return "Pollen levels are low. Sensitive individuals may notice mild symptoms."
+        case 3:
+            return "Moderate pollen levels. Wear a mask if sensitive, otherwise proceed with caution."
+        case 4:
+            return "High pollen levels. Consider a mask and limiting prolonged outdoor activity if sensitive."
         default:
-            return "Health warning of emergency conditions. Everyone should avoid all outdoor physical activity."
+            return "Very high pollen levels. Sensitive individuals should minimize outdoor exposure."
         }
     }
 }

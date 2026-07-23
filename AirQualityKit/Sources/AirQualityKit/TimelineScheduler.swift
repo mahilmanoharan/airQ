@@ -6,13 +6,25 @@ import Foundation
 public struct AQSnapshotEntry: Sendable, Equatable {
     public let date: Date
     public let aqi: Int?
+    public let dominantPollutant: String?
+    public let pollenIndex: Int?
     public let locationName: String
     public let lastUpdated: Date?
     public let hasData: Bool
 
-    public init(date: Date, aqi: Int?, locationName: String, lastUpdated: Date?, hasData: Bool) {
+    public init(
+        date: Date,
+        aqi: Int?,
+        dominantPollutant: String?,
+        pollenIndex: Int?,
+        locationName: String,
+        lastUpdated: Date?,
+        hasData: Bool
+    ) {
         self.date = date
         self.aqi = aqi
+        self.dominantPollutant = dominantPollutant
+        self.pollenIndex = pollenIndex
         self.locationName = locationName
         self.lastUpdated = lastUpdated
         self.hasData = hasData
@@ -20,7 +32,7 @@ public struct AQSnapshotEntry: Sendable, Equatable {
 }
 
 public enum TimelineScheduler {
-    public static let refreshInterval: TimeInterval = 30 * 60
+    public static let refreshInterval: TimeInterval = 60 * 60
 
     /// Builds the entries for a widget timeline from the last known snapshot.
     /// There's only ever one fetch source of truth (the main app), so this
@@ -32,6 +44,8 @@ public enum TimelineScheduler {
                 AQSnapshotEntry(
                     date: currentDate,
                     aqi: nil,
+                    dominantPollutant: nil,
+                    pollenIndex: nil,
                     locationName: "Current Location",
                     lastUpdated: nil,
                     hasData: false
@@ -43,6 +57,8 @@ public enum TimelineScheduler {
             AQSnapshotEntry(
                 date: currentDate,
                 aqi: snapshot.aqi,
+                dominantPollutant: snapshot.dominantPollutant,
+                pollenIndex: snapshot.pollenIndex,
                 locationName: snapshot.locationName,
                 lastUpdated: snapshot.lastUpdated,
                 hasData: true

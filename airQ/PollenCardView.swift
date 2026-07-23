@@ -2,20 +2,20 @@ import SwiftUI
 import AirQualityKit
 
 struct PollenCardView: View {
-    let count: Int
+    let index: Int
 
     var body: some View {
         VStack(spacing: 12) {
-            Text("\(count)")
+            Text("\(index)")
                 .font(.system(size: 72, weight: .bold))
-                .foregroundStyle(PollenPresentation.color(for: count))
+                .foregroundStyle(PollenPresentation.color(for: index))
 
             Text("Pollen")
                 .font(.title3)
                 .fontWeight(.medium)
                 .foregroundStyle(.secondary)
 
-            Text(PollenPresentation.category(for: count))
+            Text(PollenPresentation.category(for: index))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -23,11 +23,11 @@ struct PollenCardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(PollenPresentation.color(for: count).opacity(0.1))
+                .fill(PollenPresentation.color(for: index).opacity(0.1))
         )
     }
 }
 
 #Preview {
-    PollenCardView(count: 30)
+    PollenCardView(index: 3)
 }
