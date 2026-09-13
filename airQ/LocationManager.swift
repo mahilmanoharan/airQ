@@ -1,104 +1,98 @@
-import Foundation
+import AirQualityKit
 import CoreLocation
 import MapKit
-import Observation
 
-// MARK: - Location Manager
+enum LocationError: LocalizedError {
+    case denied, restricted, unavailable, requestInProgress
 
-@Observable
-class LocationManager: NSObject {
-    
-    // MARK: - Properties
-    
-    var location: CLLocationCoordinate2D?
-    var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    var errorDescription: String? {
+        switch self {
+        case .denied: "Enable location access in Settings to see local air quality."
+        case .restricted: "Location services are restricted on this device."
+        case .unavailable: "Your location is unavailable. Please try again."
+        case .requestInProgress: "A location request is already in progress."
+        }
+    }
+}
 
+/// One cancellable request, with city-level accuracy appropriate for regional readings.
+@MainActor
+final class LocationManager: NSObject, LocationProviding, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
-
-    // MARK: - Initialization
+    private var pending: CheckedContinuation<GeoCoordinate, any Error>?
+    private var requestID: UUID?
 
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
-        authorizationStatus = manager.authorizationStatus
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
-    // MARK: - Methods
-
-    func requestLocation() {
-
-        switch authorizationStatus {
-        case .notDetermined:
-            manager.requestWhenInUseAuthorization()
-        case .authorizedWhenInUse, .authorizedAlways:
-            manager.requestLocation()
-        case .denied, .restricted:
-            print("Authorization denied or restricted")
-        @unknown default:
-            print("Unknown authorization status")
+    func currentCoordinate() async throws -> GeoCoordinate {
+        try Task.checkCancellation()
+        guard pending == nil else { throw LocationError.requestInProgress }
+        let id = UUID()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation {
+                pending = $0
+                requestID = id
+                requestIfAuthorized()
+            }
+        } onCancel: {
+            Task { @MainActor [weak self] in
+                guard self?.requestID == id else { return }
+                self?.finish(.failure(CancellationError()))
+            }
         }
     }
 
-    /// Resolves a coordinate to a real place name (e.g. "San Francisco"), the same way
-    /// Apple Weather does, rather than relying on a data provider's station-name string.
-    /// Returns nil on failure so callers can fall back to another source.
-    func reverseGeocodedCityName(for coordinate: CLLocationCoordinate2D) async -> String? {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+    func cityName(for coordinate: GeoCoordinate) async -> String? {
+        guard !Task.isCancelled,
+              let request = MKReverseGeocodingRequest(location: CLLocation(
+                latitude: coordinate.latitude, longitude: coordinate.longitude
+              )) else { return nil }
         do {
-            let mapItems = try await request.mapItems
-            guard let placemark = mapItems.first?.placemark else { return nil }
-            return placemark.locality ?? placemark.subAdministrativeArea ?? placemark.administrativeArea
+            let address = try await request.mapItems.first?.addressRepresentations
+            return address?.cityName ?? address?.regionName
         } catch {
-            print("Reverse geocoding failed: \(error.localizedDescription)")
             return nil
         }
     }
-}
 
-// MARK: - CLLocationManagerDelegate
-
-extension LocationManager: CLLocationManagerDelegate {
-    
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
-        
-        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
-            manager.requestLocation()
+    private func requestIfAuthorized() {
+        guard pending != nil else { return }
+        switch manager.authorizationStatus {
+        case .notDetermined: manager.requestWhenInUseAuthorization()
+        case .authorizedAlways, .authorizedWhenInUse: manager.requestLocation()
+        case .denied: finish(.failure(LocationError.denied))
+        case .restricted: finish(.failure(LocationError.restricted))
+        @unknown default: finish(.failure(LocationError.unavailable))
         }
     }
-    
+
+    private func finish(_ result: Result<GeoCoordinate, any Error>) {
+        let continuation = pending
+        pending = nil
+        requestID = nil
+        manager.stopUpdatingLocation()
+        continuation?.resume(with: result)
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        requestIfAuthorized()
+    }
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let newLocation = locations.last else {
+        guard let location = locations.last, location.horizontalAccuracy >= 0,
+              abs(location.timestamp.timeIntervalSinceNow) < 60 else {
+            finish(.failure(LocationError.unavailable))
             return
         }
-        
-        location = newLocation.coordinate
+        finish(.success(GeoCoordinate(latitude: location.coordinate.latitude,
+                                      longitude: location.coordinate.longitude)))
     }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager error: \(error.localizedDescription)")
-    }
-}
 
-// MARK: - CLAuthorizationStatus Extension
-
-extension CLAuthorizationStatus {
-    var description: String {
-        switch self {
-        case .notDetermined:
-            return "Not Determined"
-        case .restricted:
-            return "Restricted"
-        case .denied:
-            return "Denied"
-        case .authorizedAlways:
-            return "Authorized Always"
-        case .authorizedWhenInUse:
-            return "Authorized When In Use"
-        @unknown default:
-            return "Unknown"
-        }
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {
+        finish(.failure((error as? CLError)?.code == .denied ? LocationError.denied : .unavailable))
     }
 }

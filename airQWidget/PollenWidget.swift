@@ -12,7 +12,8 @@ struct PollenWidgetEntryView: View {
     var entry: AQWidgetEntry
 
     var body: some View {
-        if entry.hasData, let pollenIndex = entry.pollenIndex {
+        if entry.hasData {
+            let pollenIndex = entry.pollenIndex
             switch family {
             case .systemMedium:
                 AQStatMediumView(

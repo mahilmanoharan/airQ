@@ -59,7 +59,8 @@ public enum AirQualityPresentation {
 
 /// Keyed on Google's Universal Pollen Index (0–5), not a raw grain count.
 public enum PollenPresentation {
-    public static func color(for index: Int) -> Color {
+    public static func color(for index: Int?) -> Color {
+        guard let index else { return .secondary }
         switch index {
         case 0:
             return .green
@@ -76,7 +77,8 @@ public enum PollenPresentation {
         }
     }
 
-    public static func category(for index: Int) -> String {
+    public static func category(for index: Int?) -> String {
+        guard let index else { return "Unavailable" }
         switch index {
         case 0:
             return "None"
@@ -93,7 +95,8 @@ public enum PollenPresentation {
         }
     }
 
-    public static func guidance(for index: Int) -> String {
+    public static func guidance(for index: Int?) -> String {
+        guard let index else { return "Pollen data is unavailable for this reading. Pull to refresh to try again." }
         switch index {
         case 0:
             return "No pollen detected today, run free!"

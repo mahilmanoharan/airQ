@@ -6,19 +6,24 @@ import Foundation
 public struct AQSnapshot: Codable, Sendable, Equatable {
     public let aqi: Int
     public let dominantPollutant: String?
-    public let pollenIndex: Int
+    /// nil means unavailable, which is different from a measured zero.
+    public let pollenIndex: Int?
     public let locationName: String
     public let lastUpdated: Date
+    /// Absent in legacy snapshots; they remain displayable but cannot satisfy a location-specific cache lookup.
+    public let coordinate: GeoCoordinate?
 
-    public init(aqi: Int, dominantPollutant: String?, pollenIndex: Int, locationName: String, lastUpdated: Date) {
+    public init(aqi: Int, dominantPollutant: String?, pollenIndex: Int?, locationName: String, lastUpdated: Date, coordinate: GeoCoordinate? = nil) {
         self.aqi = aqi
         self.dominantPollutant = dominantPollutant
         self.pollenIndex = pollenIndex
         self.locationName = locationName
         self.lastUpdated = lastUpdated
+        self.coordinate = coordinate
     }
 
     public func isFresh(asOf date: Date = Date(), within interval: TimeInterval = 60 * 60) -> Bool {
-        date.timeIntervalSince(lastUpdated) < interval
+        let age = date.timeIntervalSince(lastUpdated)
+        return age >= 0 && age < interval
     }
 }

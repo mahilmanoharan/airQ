@@ -11,7 +11,8 @@ struct CombinedWidgetEntryView: View {
     var entry: AQWidgetEntry
 
     var body: some View {
-        if entry.hasData, let aqi = entry.aqi, let pollenIndex = entry.pollenIndex {
+        if entry.hasData, let aqi = entry.aqi {
+            let pollenIndex = entry.pollenIndex
             VStack(alignment: .leading, spacing: 10) {
                 Text(entry.locationName)
                     .font(.subheadline)
@@ -37,9 +38,9 @@ struct CombinedWidgetEntryView: View {
         }
     }
 
-    private func stat(value: Int, label: String, category: String, color: Color) -> some View {
+    private func stat(value: Int?, label: String, category: String, color: Color) -> some View {
         VStack(spacing: 4) {
-            Text("\(value)")
+            Text(value.map(String.init) ?? "—")
                 .font(.system(size: 32, weight: .bold))
                 .foregroundStyle(color)
             Text(label)

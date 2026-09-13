@@ -2,11 +2,11 @@ import SwiftUI
 import AirQualityKit
 
 struct PollenCardView: View {
-    let index: Int
+    let index: Int?
 
     var body: some View {
         VStack(spacing: 12) {
-            Text("\(index)")
+            Text(index.map(String.init) ?? "—")
                 .font(.system(size: 72, weight: .bold))
                 .foregroundStyle(PollenPresentation.color(for: index))
 

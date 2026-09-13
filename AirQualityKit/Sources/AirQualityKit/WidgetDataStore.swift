@@ -6,7 +6,7 @@ import Foundation
 public enum WidgetDataStore {
     public static let appGroupIdentifier = "group.com.mahilmanoharan.airQ"
 
-    private static let snapshotKey = "AQSnapshot.latest"
+    fileprivate static let snapshotKey = "AQSnapshot.latest"
 
     private static var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: appGroupIdentifier)
@@ -24,5 +24,25 @@ public enum WidgetDataStore {
             return nil
         }
         return try? JSONDecoder().decode(AQSnapshot.self, from: data)
+    }
+}
+
+/// Injectable app-side cache. Widget providers retain the lightweight static reader.
+@MainActor
+public struct AppGroupSnapshotCache: SnapshotCaching {
+    private let defaults: UserDefaults?
+
+    public init(defaults: UserDefaults? = UserDefaults(suiteName: WidgetDataStore.appGroupIdentifier)) {
+        self.defaults = defaults
+    }
+
+    public func load() throws -> AQSnapshot? {
+        guard let data = defaults?.data(forKey: WidgetDataStore.snapshotKey) else { return nil }
+        return try JSONDecoder().decode(AQSnapshot.self, from: data)
+    }
+
+    public func save(_ snapshot: AQSnapshot) throws {
+        guard let defaults else { throw CocoaError(.fileWriteNoPermission) }
+        defaults.set(try JSONEncoder().encode(snapshot), forKey: WidgetDataStore.snapshotKey)
     }
 }

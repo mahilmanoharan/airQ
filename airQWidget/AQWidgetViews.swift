@@ -11,7 +11,7 @@ import SwiftUI
 import WidgetKit
 
 struct AQStatSmallView: View {
-    let value: Int
+    let value: Int?
     let label: String
     let category: String
     let color: Color
@@ -19,7 +19,7 @@ struct AQStatSmallView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text("\(value)")
+            Text(value.map(String.init) ?? "—")
                 .font(.system(size: 44, weight: .bold))
             Text(label)
                 .font(.caption)
@@ -41,7 +41,7 @@ struct AQStatSmallView: View {
 }
 
 struct AQStatMediumView: View {
-    let value: Int
+    let value: Int?
     let label: String
     let category: String
     let color: Color
@@ -51,7 +51,7 @@ struct AQStatMediumView: View {
     var body: some View {
         HStack(spacing: 20) {
             VStack(spacing: 4) {
-                Text("\(value)")
+                Text(value.map(String.init) ?? "—")
                     .font(.system(size: 48, weight: .bold))
                 Text(label)
                     .font(.caption)
