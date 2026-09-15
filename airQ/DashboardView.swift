@@ -33,6 +33,7 @@ struct DashboardView: View {
         .refreshable { await model.load(forceRefresh: true) }
         .toolbar {
             if model.isLoading, model.snapshot != nil { ProgressView() }
+            NavigationLink("Listen") { ListenDestinationView() }
         }
     }
 

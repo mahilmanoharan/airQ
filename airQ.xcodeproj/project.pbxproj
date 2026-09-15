@@ -14,6 +14,7 @@
 		A4BC4D5F300C848A0092EF51 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4BC4D42300C81D70092EF51 /* WidgetKit.framework */; };
 		A4BC4D62300C85660092EF51 /* AirQualityKit in Frameworks */ = {isa = PBXBuildFile; productRef = A4BC4D61300C85660092EF51 /* AirQualityKit */; };
 		A4BC4D64300C857D0092EF51 /* AirQualityKit in Frameworks */ = {isa = PBXBuildFile; productRef = A4BC4D63300C857D0092EF51 /* AirQualityKit */; };
+		A4BC4D80300C90020092EF51 /* RespiratoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = A4BC4D82300C90040092EF51 /* RespiratoryKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,6 +94,7 @@
 			files = (
 				A4BC4D62300C85660092EF51 /* AirQualityKit in Frameworks */,
 				A4BC4D5F300C848A0092EF51 /* WidgetKit.framework in Frameworks */,
+				A4BC4D80300C90020092EF51 /* RespiratoryKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,6 +177,7 @@
 			name = airQ;
 			packageProductDependencies = (
 				A4BC4D61300C85660092EF51 /* AirQualityKit */,
+				A4BC4D82300C90040092EF51 /* RespiratoryKit */,
 			);
 			productName = airQ;
 			productReference = A4D5844B2F8BD9CE00BA325D /* airQ.app */;
@@ -209,6 +212,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A4BC4D60300C84ED0092EF51 /* XCLocalSwiftPackageReference "AirQualityKit" */,
+				A4BC4D81300C90030092EF51 /* XCLocalSwiftPackageReference "RespiratoryKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A4D5844C2F8BD9CE00BA325D /* Products */;
@@ -461,6 +465,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "airQ uses the microphone to detect coughing sounds, helping you track respiratory symptoms over time. Audio is analyzed on your device and is never recorded or stored.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -499,6 +504,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to provide the latest air quality parameters in your area!";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "airQ uses the microphone to detect coughing sounds, helping you track respiratory symptoms over time. Audio is analyzed on your device and is never recorded or stored.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -558,6 +564,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = AirQualityKit;
 		};
+		A4BC4D81300C90030092EF51 /* XCLocalSwiftPackageReference "RespiratoryKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = RespiratoryKit;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -570,6 +580,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A4BC4D60300C84ED0092EF51 /* XCLocalSwiftPackageReference "AirQualityKit" */;
 			productName = AirQualityKit;
+		};
+		A4BC4D82300C90040092EF51 /* RespiratoryKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A4BC4D81300C90030092EF51 /* XCLocalSwiftPackageReference "RespiratoryKit" */;
+			productName = RespiratoryKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
