@@ -8,11 +8,18 @@ import SwiftUI
 import AirQualityKit
 
 struct CombinedWidgetEntryView: View {
-    var entry: AQWidgetEntry
+    @Environment(\.widgetFamily) private var family
+    let entry: AQSnapshotEntry
 
     var body: some View {
-        if entry.hasData, let aqi = entry.aqi {
-            let pollenIndex = entry.pollenIndex
+        if family.isAccessory {
+            if entry.hasData {
+                AccessoryCombinedView(aqi: entry.aqiMetric, pollen: entry.pollenMetric, locationName: entry.locationName,
+                                      isStale: entry.isStale)
+            } else {
+                AccessoryNoDataView()
+            }
+        } else if entry.hasData, entry.aqi != nil {
             VStack(alignment: .leading, spacing: 10) {
                 Text(entry.locationName)
                     .font(.subheadline)
@@ -20,14 +27,14 @@ struct CombinedWidgetEntryView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 16) {
-                    stat(value: aqi, label: "AQI", category: AirQualityPresentation.category(for: aqi), color: AirQualityPresentation.color(for: aqi))
-                    stat(value: pollenIndex, label: "Pollen", category: PollenPresentation.category(for: pollenIndex), color: PollenPresentation.color(for: pollenIndex))
+                    stat(entry.aqiMetric, label: "AQI")
+                    stat(entry.pollenMetric, label: entry.pollenIsTomorrowsForecast ? "Pollen (tmrw)" : "Pollen")
                 }
 
                 if let lastUpdated = entry.lastUpdated {
                     Text("Updated \(lastUpdated, style: .relative) ago")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(entry.isStale ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
                 }
             }
             .padding()
@@ -38,15 +45,15 @@ struct CombinedWidgetEntryView: View {
         }
     }
 
-    private func stat(value: Int?, label: String, category: String, color: Color) -> some View {
+    private func stat(_ metric: WidgetMetric, label: String) -> some View {
         VStack(spacing: 4) {
-            Text(value.map(String.init) ?? "—")
+            Text(metric.value.map(String.init) ?? "—")
                 .font(.system(size: 32, weight: .bold))
-                .foregroundStyle(color)
+                .foregroundStyle(metric.color)
             Text(label)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            Text(category)
+            Text(metric.category)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -56,27 +63,25 @@ struct CombinedWidgetEntryView: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(color.opacity(0.15))
+                .fill(metric.color.opacity(0.15))
         )
     }
 }
 
 struct CombinedWidget: Widget {
-    let kind: String = "airQWidget.combined"
-
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: AQWidgetProvider()) { entry in
+        StaticConfiguration(kind: "airQWidget.combined", provider: AQWidgetProvider()) { entry in
             CombinedWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("AQI & Pollen")
         .description("Shows both the air quality index and pollen index side by side.")
-        .supportedFamilies([.systemMedium])
+        .supportedFamilies([.systemMedium, .accessoryRectangular])
     }
 }
 
 #Preview(as: .systemMedium) {
     CombinedWidget()
 } timeline: {
-    AQWidgetEntry(AQSnapshotEntry(date: .now, aqi: 42, dominantPollutant: "pm25", pollenIndex: 2, locationName: "San Francisco", lastUpdated: .now, hasData: true))
-    AQWidgetEntry(AQSnapshotEntry(date: .now, aqi: nil, dominantPollutant: nil, pollenIndex: nil, locationName: "Current Location", lastUpdated: nil, hasData: false))
+    AQSnapshotEntry.preview
+    AQSnapshotEntry.previewEmpty
 }

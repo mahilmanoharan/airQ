@@ -2,6 +2,25 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>mahilmanoharan.airQ.refresh</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>mahilmanoharan.airQ</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>airq</string>
+			</array>
+		</dict>
+	</array>
 	<key>GooglePollenAPIKey</key>
 	<string>$(GOOGLE_POLLEN_API_KEY)</string>
 </dict>

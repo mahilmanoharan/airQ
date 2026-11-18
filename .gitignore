@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager / Xcode build output
+.build/
+.swiftpm/
+DerivedData/
+
+# Per-user Xcode state (files already tracked stay tracked until removed from the index)
+xcuserdata/
+*.xcuserstate

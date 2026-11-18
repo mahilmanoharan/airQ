@@ -86,6 +86,33 @@ struct DebounceTests {
     func handlesEmpty() {
         #expect(DetectionAnalysis.debounce([], minInterEventGap: 1.0).isEmpty)
     }
+
+    @Test("Chaining doesn't depend on confidence order (regression: 0, 0.9, 1.8 s)",
+          arguments: [[0.5, 0.9, 0.6], [0.9, 0.5, 0.6], [0.6, 0.5, 0.9]])
+    func chainIsConfidenceIndependent(confidences: [Double]) {
+        let snapshots = zip([0.0, 0.9, 1.8], confidences).map { snapshot($0, confidence: $1) }
+
+        let result = DetectionAnalysis.debounce(snapshots, minInterEventGap: 1.0)
+
+        #expect(result.count == 1)
+        #expect(result[0].timestamp == snapshots[0].timestamp)
+        #expect(result[0].confidence == 0.9)
+    }
+
+    @Test("A gap exactly equal to the minimum starts a new event")
+    func boundaryEquality() {
+        let result = DetectionAnalysis.debounce([snapshot(0), snapshot(1.0)], minInterEventGap: 1.0)
+        #expect(result.count == 2)
+    }
+
+    @Test("Interleaved labels chain independently")
+    func interleavedLabels() {
+        let snapshots = [snapshot(0, label: "cough"), snapshot(0.3, label: "sneeze"), snapshot(0.6, label: "cough")]
+
+        let result = DetectionAnalysis.debounce(snapshots, minInterEventGap: 1.0)
+
+        #expect(result.map(\.label) == ["cough", "sneeze"])
+    }
 }
 
 @Suite("DetectionAnalysis.cluster")
@@ -135,5 +162,24 @@ struct ClusterTests {
     @Test("Handles an empty input")
     func handlesEmpty() {
         #expect(DetectionAnalysis.cluster([], boutGapThreshold: 10).isEmpty)
+    }
+}
+
+@Suite("DetectionAnalysis.peaks")
+struct PeaksTests {
+    @Test("Short input is returned unchanged")
+    func short() {
+        let input = (0..<5).map { snapshot(Double($0)) }
+        #expect(DetectionAnalysis.peaks(input, maximumPoints: 10) == input)
+    }
+
+    @Test("Long input is bounded, keeps the tallest spike, and stays in time order")
+    func bounded() {
+        var input = (0..<10_000).map { snapshot(Double($0), confidence: 0.1) }
+        input[4_321] = snapshot(4_321, confidence: 0.97)
+        let drawn = DetectionAnalysis.peaks(input, maximumPoints: 200)
+        #expect(drawn.count <= 200)
+        #expect(drawn.contains { $0.confidence == 0.97 })
+        #expect(drawn.map(\.timestamp) == drawn.map(\.timestamp).sorted())
     }
 }

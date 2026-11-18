@@ -14,5 +14,10 @@ struct airQWidgetBundle: WidgetBundle {
         AQIWidget()
         PollenWidget()
         CombinedWidget()
+        OutlookWidget()
+        AirQualityControl()
+        CheckInControl()
+        ListenControl()
+        LifeEventControl()
     }
 }

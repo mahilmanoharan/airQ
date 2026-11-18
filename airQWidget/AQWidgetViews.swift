@@ -11,49 +11,56 @@ import SwiftUI
 import WidgetKit
 
 struct AQStatSmallView: View {
-    let value: Int?
-    let label: String
-    let category: String
-    let color: Color
+    let metric: WidgetMetric
     let locationName: String
+    /// When set, the reading is old enough to flag (the app only refreshes when opened).
+    var staleSince: Date? = nil
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text(value.map(String.init) ?? "—")
+        VStack(spacing: 4) {
+            Text(metric.value.map(String.init) ?? "—")
                 .font(.system(size: 44, weight: .bold))
-            Text(label)
+            // The word carries the meaning, so it is the most prominent text after the number.
+            Text(metric.category)
+                .font(.subheadline.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+            Text(metric.label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text(category)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
             Spacer(minLength: 0)
-            Text(locationName)
-                .font(.caption2)
-                .lineLimit(1)
-                .foregroundStyle(.secondary)
+            if let staleSince {
+                Label { Text(staleSince, style: .relative) } icon: { Image(systemName: "clock") }
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+                    .lineLimit(1)
+                    .accessibilityLabel("Reading is old")
+            } else {
+                Text(locationName)
+                    .font(.caption2)
+                    .lineLimit(1)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(color.opacity(0.15), for: .widget)
+        .containerBackground(metric.color.opacity(0.15), for: .widget)
     }
 }
 
 struct AQStatMediumView: View {
-    let value: Int?
-    let label: String
-    let category: String
-    let color: Color
+    let metric: WidgetMetric
     let locationName: String
     let lastUpdated: Date?
+    var isStale = false
 
     var body: some View {
         HStack(spacing: 20) {
             VStack(spacing: 4) {
-                Text(value.map(String.init) ?? "—")
+                Text(metric.value.map(String.init) ?? "—")
                     .font(.system(size: 48, weight: .bold))
-                Text(label)
+                Text(metric.label)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -62,13 +69,20 @@ struct AQStatMediumView: View {
                 Text(locationName)
                     .font(.headline)
                     .lineLimit(2)
-                Text(category)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Text(metric.category)
+                    .font(.title3.weight(.semibold))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                if let footnote = metric.footnote {
+                    Text(footnote)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
                 if let lastUpdated {
                     Text("Updated \(lastUpdated, style: .relative) ago")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(isStale ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
                 }
             }
 
@@ -76,17 +90,19 @@ struct AQStatMediumView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(color.opacity(0.15), for: .widget)
+        .containerBackground(metric.color.opacity(0.15), for: .widget)
     }
 }
 
 struct AQNoDataView: View {
+    var message = "Open airQ to load air quality data"
+
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: "aqi.medium")
                 .font(.title2)
                 .foregroundStyle(.secondary)
-            Text("Open airQ to load air quality data")
+            Text(message)
                 .font(.caption)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)

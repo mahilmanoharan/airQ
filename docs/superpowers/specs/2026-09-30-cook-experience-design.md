@@ -1,7 +1,7 @@
 # airQ: a personal breathing history
 
 ## Intent and authorization
-The user wants an exceptionally clear, lightweight experience for seeing personal symptom history beside air quality and sharing it with clinicians. On 2026-09-30 they delegated design and implementation decisions, with all work on `cook`. Preserve the prior review in HANDOFF.md. The user subsequently authorized local feature commits on `cook` only. No push, merge with main, deployment, account changes, schema edits, or real-history deletion.
+The user wants an exceptionally clear, lightweight experience for seeing personal symptom history beside air quality and sharing it with clinicians. They delegated design and implementation decisions, with all work on `cook`. Preserve the prior review in HANDOFF.md. The handoff records authorization for local feature commits and publishing cook; main must remain unchanged. No merge with main, deployment, account changes, schema edits, or real-history deletion.
 
 ## Direction
 Four destinations: Today, History, Report, More. Today has a compact current-air overview and a prominent check-in card. History is the main comparison workspace: shared 7/30/90-day selection, explicit coverage, symptoms adjacent to environmental plots, details disclosed only when useful. Report puts a readable period-specific summary first and raw export behind an explicit advanced route. More groups optional listening/life events, preferences and data management. All existing deep links remain valid.
