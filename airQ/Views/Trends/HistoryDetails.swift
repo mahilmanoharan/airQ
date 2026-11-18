@@ -5,27 +5,8 @@ import RespiratoryKit
 struct HistoryDetails: View {
     let data: ChartData
     @Binding var selection: Date?
-    @State private var listeningExpanded = false
 
     var body: some View {
-        if data.hasHourOfDayData {
-            DisclosureGroup("Sounds & listening", isExpanded: $listeningExpanded) {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Sound counts cover only the time airQ was listening and depend on your sensitivity setting.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                    HistoryListeningPanels(data: data, selection: $selection)
-                    HourOfDayCard(data: data).id("hourOfDay")
-                }
-                .padding(.top, 12)
-            }
-            .airQCard()
-            .id("listening")
-            #if DEBUG
-            .onAppear {
-                if UserDefaults.standard.string(forKey: "trendsScrollTo") == "hourOfDay" { listeningExpanded = true }
-            }
-            #endif
-        }
         if data.hasMedicationAnswers {
             DisclosureGroup("Medication & peak flow") {
                 HistoryMedicationPanels(data: data, selection: $selection).padding(.top, 12)
@@ -61,7 +42,37 @@ struct HistoryDetails: View {
     }
 }
 
-struct HistoryListeningPanels: View {
+struct HistoryListeningDetails: View {
+    let data: ChartData
+    @Binding var selection: Date?
+    @Environment(\.detectionStore) private var store
+
+    var body: some View {
+        if data.hasListeningSessions, let store {
+            NavigationLink("Recorded sessions") {
+                ListeningSessionsView(store: store, historyInterval: data.domain)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+        }
+
+        if data.hasHourOfDayData {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("These charts show saved sound detections and listening time. Counts depend on your listening sensitivity.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                HistoryListeningPanels(data: data, selection: $selection)
+                HourOfDayCard(data: data).id("hourOfDay")
+            }
+            .airQCard()
+        } else {
+            Text("No sound results were saved for these sessions.")
+                .foregroundStyle(.secondary)
+                .airQCard()
+        }
+    }
+}
+
+private struct HistoryListeningPanels: View {
     let data: ChartData
     @Binding var selection: Date?
 

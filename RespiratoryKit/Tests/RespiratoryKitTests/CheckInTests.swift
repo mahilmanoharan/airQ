@@ -44,6 +44,20 @@ struct CheckInTests {
         #expect(model.previousStableAnswers == nil)
     }
 
+    @Test("Today opens a new check-in directly only after loading an empty day")
+    func directCheckInRequiresLoadedEmptyDay() async throws {
+        let (model, store) = try makeModel(at: "2026-09-20T19:00:00Z")
+        #expect(!model.canStartNewCheckInToday)
+        await model.load()
+        #expect(model.canStartNewCheckInToday)
+
+        try await store.appendCheckIn(CheckInDraft(dayKey: "2026-09-20", daytimeSymptoms: false),
+                                      recordedAt: try utc("2026-09-20T18:00:00Z"),
+                                      timeZone: zone, completionSeconds: 10, appVersion: "t")
+        await model.load()
+        #expect(!model.canStartNewCheckInToday)
+    }
+
     @Test("The week strip is the last seven local days, marks saved days, and only today and yesterday open the form")
     func recentDays() async throws {
         let (model, store) = try makeModel(at: "2026-09-21T02:00:00Z")  // still the 20th in Los Angeles

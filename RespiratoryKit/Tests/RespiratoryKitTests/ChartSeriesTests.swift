@@ -51,6 +51,29 @@ struct ChartSeriesTests {
         #expect(data.hourOfDay[23].count == 2 && data.hourOfDay[0].count == 1)
         #expect(data.hourOfDay.map(\.listeningSeconds).reduce(0, +) == 120)
         #expect(data.hasHourOfDayData)
+        #expect(data.hasListeningSessions)
+    }
+
+    @Test("Listening history includes empty sessions started within the period")
+    func sessionsWithoutSoundEvidence() throws {
+        let start = try day("2026-09-10").interval.start
+        let end = try day("2026-09-12").interval.end
+
+        func session(startedAt: Date, endedAt: Date?) -> ListeningSessionSnapshot {
+            .init(id: UUID(), startedAt: startedAt, endedAt: endedAt, endReason: nil,
+                  windowCount: 0, lastWindowEnd: nil, captureSemanticsVersion: 2, inputPortType: nil)
+        }
+
+        let before = session(startedAt: start.addingTimeInterval(-60), endedAt: start)
+        let after = session(startedAt: end, endedAt: nil)
+        let empty = session(startedAt: start, endedAt: nil)
+        let overlapping = session(startedAt: start.addingTimeInterval(-60), endedAt: start.addingTimeInterval(60))
+
+        #expect(try !build(sessions: [before, after]).hasListeningSessions)
+        let emptyHistory = try build(sessions: [empty])
+        #expect(emptyHistory.hasListeningSessions)
+        #expect(!emptyHistory.hasHourOfDayData)
+        #expect(try build(sessions: [overlapping]).hasListeningSessions)
     }
 
     @Test("Pollen uses the latest forecast requested each local day; check-ins chart components")

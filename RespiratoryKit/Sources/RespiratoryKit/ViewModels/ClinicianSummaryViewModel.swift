@@ -6,6 +6,7 @@ import Observation
 @MainActor @Observable
 public final class ClinicianSummaryViewModel {
     public private(set) var summary: ClinicianSummary?
+    public private(set) var report: ClinicianReport?
     public private(set) var isLoading = false
     public private(set) var errorMessage: String?
 
@@ -28,10 +29,11 @@ public final class ClinicianSummaryViewModel {
 
     /// Whole local days ending with today. "Everything" starts at the first day anything was recorded.
     func domain(for period: ExportPeriod, dailyRecords: [DailyRecordSnapshot], checkIns: [CheckInRow]) -> DateInterval {
-        let today = LocalDay(containing: now(), in: timeZone)
+        let reference = now()
+        let today = LocalDay(containing: reference, in: timeZone)
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
-        if let range = period.range(now: now(), calendar: calendar) {
+        if let range = period.range(now: reference, calendar: calendar) {
             return DateInterval(start: LocalDay(containing: range.start, in: timeZone).interval.start, end: today.interval.end)
         }
         let firstKey = (dailyRecords.map(\.dayKey) + checkIns.map(\.draft.dayKey)).min()
@@ -39,11 +41,20 @@ public final class ClinicianSummaryViewModel {
         return DateInterval(start: min(first.interval.start, today.interval.start), end: today.interval.end)
     }
 
-    /// Limited archives pass the same recorded-at bounds as their CSVs. Report uses the whole-day view.
+    /// Limited archives pass the same recorded-at bounds as their CSVs.
     public func load(period: ExportPeriod, recordedIn archiveRange: DateInterval? = nil) async {
+        await load(period: period, recordedIn: archiveRange, includeReport: false)
+    }
+
+    public func loadReport(period: HistoryPeriod) async {
+        await load(period: period.exportPeriod, recordedIn: nil, includeReport: true)
+    }
+
+    private func load(period: ExportPeriod, recordedIn archiveRange: DateInterval?, includeReport: Bool) async {
         generation += 1
         let mine = generation
         summary = nil
+        report = nil
         errorMessage = nil
         isLoading = true
         defer { if mine == generation { isLoading = false } }
@@ -59,7 +70,15 @@ public final class ClinicianSummaryViewModel {
                                                     detectionLabel: "cough", contextRecordedIn: recordedIn)
             guard mine == generation else { return }
             try Task.checkCancellation()
-            summary = ClinicianSummary.make(from: built, timeZone: timeZone, tuning: tuning)
+            if includeReport {
+                let builtReport = await ClinicianReport.build(from: built, timeZone: timeZone, tuning: tuning)
+                guard mine == generation else { return }
+                try Task.checkCancellation()
+                report = builtReport
+                summary = builtReport.summary
+            } else {
+                summary = ClinicianSummary.make(from: built, timeZone: timeZone, tuning: tuning)
+            }
             errorMessage = nil
         } catch {
             guard mine == generation else { return }

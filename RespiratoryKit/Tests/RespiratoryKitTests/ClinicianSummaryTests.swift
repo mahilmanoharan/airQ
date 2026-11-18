@@ -81,6 +81,28 @@ struct ClinicianSummaryTests {
 
 @Suite("Clinician summary loading") @MainActor
 struct ClinicianSummaryLoadingTests {
+    @Test("The report follows the selected period and archive loads clear it")
+    func selectedReportPeriod() async throws {
+        let zone = TimeZone.gmt
+        let store = RecordStore(modelContainer: try RespiratoryStore.makeInMemoryContainer())
+        let today = try #require(LocalDay(key: "2026-11-02", in: zone))
+        var draft = CheckInDraft(dayKey: "2026-10-13")
+        draft.answerNoSymptoms()
+        try await store.appendCheckIn(draft, recordedAt: today.interval.start, timeZone: zone,
+                                      completionSeconds: nil, appVersion: "t")
+        let model = ClinicianSummaryViewModel(records: store, detections: nil, tuning: { .init() },
+                                               timeZone: zone, now: { today.interval.start })
+        await model.loadReport(period: .month)
+        #expect(model.report?.summary.checkInDays == 1)
+        #expect(model.report?.weeks.count == 5)
+        await model.loadReport(period: .week)
+        #expect(model.report?.summary.checkInDays == 0)
+        #expect(model.report?.weeks.map(\.firstDayKey) == ["2026-10-27"])
+        await model.load(period: .last30)
+        #expect(model.report == nil)
+        #expect(model.summary?.checkInDays == 1)
+    }
+
     @Test("A limited archive summary includes only life-event versions saved within its CSV bounds")
     func archiveLifeEvents() async throws {
         let zone = TimeZone.gmt

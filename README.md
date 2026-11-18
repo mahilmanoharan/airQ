@@ -9,8 +9,10 @@ An iOS app that shows air quality (AQI) and pollen for your location, with home-
 - **Tomorrow** on the dashboard: the forecast air quality and pollen, for planning.
 - **Controls** for Control Center, the Lock Screen and the Action button: the saved AQI, Daily Check-in, Listen and Life Events.
 - **Siri / Shortcuts**: the saved reading, EPA guidance, "No symptoms today" (a one-step check-in that never overwrites recorded symptoms), opening any screen, and `airq://<screen>` deep links.
-- **Today → History → Report**: an optional daily check-in, symptoms beside air quality and pollen, and a readable clinician summary with shared 7/30/90-day periods. Missing days remain unknown. Reports show coverage before sharing.
-- **More**: optional on-device listening (audio is never stored), life events, alerts and stored-data tools. Raw CSV/provider archives remain under Report’s advanced export, for everything or the last 7/30/90 days. Records stay on the device until you choose to share.
+- **Today**: tappable AQI and pollen cards, tomorrow’s forecast, and a check-in.
+- **Listen**: on-device cough analysis and past listening sessions. Audio is never stored.
+- **History and Report**: day details and comparison charts, plus a printable clinician summary. Both tabs share 7/30/90-day periods. Raw CSV/provider archives are available under Report’s advanced export, for everything or the last 7/30/90 days. Records stay on the device until you choose to share.
+- **More**: life events, alerts and stored-data tools.
 
 ## Layout
 

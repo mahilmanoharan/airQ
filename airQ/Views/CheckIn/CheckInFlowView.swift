@@ -65,7 +65,7 @@ struct CheckInFlowView: View {
     @ViewBuilder private var card: some View {
         switch step {
         case .breathing:
-            QuestionCard("How was your breathing \(dayWord)?", hint: "Breathing or allergy symptoms, day or night.") {
+            QuestionCard("How was your breathing \(dayWord)?", hint: "Answer as much as you like.") {
                 ForEach(CheckInFlow.Breathing.allCases, id: \.self) { answer in
                     AnswerButton(title: CheckInLabels.breathing(answer),
                                  isSelected: CheckInFlow.breathing(of: model.draft) == answer) {

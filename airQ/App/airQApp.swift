@@ -45,6 +45,7 @@ private struct AppRootView: View {
     @State private var checkIn: CheckInViewModel?
     @State private var tab: AppTab
     @State private var airPath: [AppRoute] = []
+    @State private var listenPath: [ListenDestination] = []
     @State private var morePath: [AppRoute]
     @State private var reportPath: [AppRoute]
     @State private var recordActivation = 0
@@ -82,6 +83,11 @@ private struct AppRootView: View {
                     .navigationDestination(for: AppRoute.self) { $0.destination }
                 }
                 .modifier(recordingErrorBar)
+            }
+            Tab("Listen", systemImage: "waveform", value: AppTab.listen) {
+                NavigationStack(path: $listenPath) { AppRoute.listen.destination }
+                    .id(AppServices.shared.eraseRevision)
+                    .modifier(recordingErrorBar)
             }
             Tab("History", systemImage: "chart.xyaxis.line", value: AppTab.trends) {
                 NavigationStack { AppRoute.trends.destination }.modifier(recordingErrorBar)
@@ -141,6 +147,7 @@ private struct AppRootView: View {
         .onChange(of: AppServices.shared.eraseRevision) {
             // Drop prior drafts and destinations that could still hold pre-erase results.
             airPath = []
+            listenPath = []
             reportPath = []
             if let records = services?.recordStore {
                 checkIn = CheckInViewModel(store: records, appVersion: AppVersion.current)
@@ -172,14 +179,18 @@ private struct AppRootView: View {
         RecordingErrorInset(message: isWelcoming ? nil : services?.recorder.lastError, dismissed: $dismissedError)
     }
 
-    /// A link, Siri, a control or an alert tap: switch to its tab; under More, open the screen itself.
+    /// A link, Siri, a control or an alert tap opens the requested screen in its tab.
     private func open(_ linked: [AppRoute]) {
         guard !AppServices.shared.isErasing else { return }
         let destination = TabDestination(linked)
         tab = destination.tab
-        if destination.tab == .air { airPath = destination.path }
-        if destination.tab == .more { morePath = destination.path }
-        if destination.tab == .report { reportPath = destination.path }
+        switch destination.tab {
+        case .air: airPath = destination.path
+        case .listen: listenPath = []
+        case .trends: break
+        case .report: reportPath = destination.path
+        case .more: morePath = destination.path
+        }
     }
 
     private func start() async {

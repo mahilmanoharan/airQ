@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Every screen besides the dashboard: three are tabs (`tab`), the rest are listed under More.
+/// Routes to tab roots and screens within each tab.
 enum AppRoute: String, Hashable, CaseIterable {
     case checkIn, trends, report, listen, contextEvents, records, export, about, alerts, erase
 
@@ -20,13 +20,11 @@ enum AppRoute: String, Hashable, CaseIterable {
     }
 
     /// The More tab's grouping: noting life events, managing the record, settings/about, and erasing.
-    /// The everyday screens (check-in, listen, trends) are tabs of their own.
     static let menuSections: [[AppRoute]] = {
-        let sections: [[AppRoute]] = [[.listen, .contextEvents], [.alerts], [.records, .about], [.erase]]
-        // A screen that is neither a tab nor in More is easy to lose (this once hid Alerts and Erase).
+        let sections: [[AppRoute]] = [[.contextEvents], [.alerts], [.records, .about], [.erase]]
         let tabs = Set(allCases.filter { $0.tab != .more })
         assert(Set(sections.joined()).union(tabs) == Set(allCases) && sections.joined().allSatisfy { $0.tab == .more },
-               "Every AppRoute must be a tab or appear in a More section")
+               "Every AppRoute assigned to More must appear in a More section")
         return sections
     }()
 

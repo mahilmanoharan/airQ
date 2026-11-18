@@ -9,7 +9,7 @@ struct TomorrowCard: View {
     var body: some View {
         if let day = TimelineScheduler.tomorrow(for: snapshot) {
             VStack(alignment: .leading, spacing: 6) {
-                Label("Tomorrow", systemImage: "calendar")
+                Text("Tomorrow’s forecast")
                     .font(.headline)
                 if let aqi = day.aqiPeak {
                     Text("Air quality up to \(aqi) · \(AirQualityPresentation.category(for: aqi))")
@@ -17,11 +17,11 @@ struct TomorrowCard: View {
                 if let pollen = day.pollenIndex {
                     Text("Pollen \(pollen) of 5 · \(PollenPresentation.category(for: pollen))")
                 }
-                Text("A forecast, not a measurement.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
             }
-            .dashboardCard()
+            .font(.subheadline)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
             .accessibilityElement(children: .combine)
         }
     }

@@ -4,22 +4,37 @@ import XCTest
 /// (`-uiTestMode YES`), so tests never write real history or spend provider requests.
 @MainActor
 final class AirQUITests: XCTestCase {
-    /// `detailsOpen` forces the dashboard's detail sections open (most tests exercise them); pass nil to
-    /// use the persisted setting, as a person would.
-    private func launch(route: String? = nil, extraArguments: [String] = [], detailsOpen: Bool? = true) -> XCUIApplication {
+    private func launch(route: String? = nil, extraArguments: [String] = []) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-uiTestMode", "YES"] + (route.map { ["-initialRoute", $0] } ?? []) + extraArguments
-            + (detailsOpen.map { ["-dashboardShowsDetails", $0 ? "YES" : "NO"] } ?? [])
         app.launch()
         return app
     }
 
     /// The cards, one question at a time: Next confirms an answer; Skip leaves it unanswered.
     private func startTodaysCheckIn(_ app: XCUIApplication) {
-        let start = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Check in for today'")).firstMatch
-        XCTAssertTrue(start.waitForExistence(timeout: 10))
+        let start = app.buttons.containing(NSPredicate(
+            format: "identifier == %@ OR label BEGINSWITH %@", "todayCheckIn", "Check in for today")).firstMatch
+        reveal(start, in: app)
         start.tap()
+    }
+
+    private func openMetric(_ metric: String, title: String, in app: XCUIApplication) {
+        let card = app.buttons["todayMetric-\(metric)"]
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        card.tap()
+        XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 5))
+    }
+
+    private func expectReportCoverage(_ text: String, in app: XCUIApplication) {
+        let preview = app.buttons["previewReport"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 10))
+        preview.tap()
+        let coverage = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier == %@ AND label CONTAINS %@", "reportCoverage-Check-ins", text)).firstMatch
+        XCTAssertTrue(coverage.waitForExistence(timeout: 5))
+        app.navigationBars["Report preview"].buttons["Done"].tap()
     }
 
     private func next(_ app: XCUIApplication) {
@@ -76,8 +91,7 @@ final class AirQUITests: XCTestCase {
     }
 
     func testTheDashboardShowsTomorrowWithoutOpeningDetails() {
-        // Details closed, as most people keep them: tomorrow is part of the essentials.
-        let app = launch(detailsOpen: false)
+        let app = launch()
         let tomorrow = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Air quality up to 68'")).firstMatch
         for _ in 0..<4 where !tomorrow.waitForExistence(timeout: 2) { app.swipeUp() }
         XCTAssertTrue(tomorrow.exists)
@@ -122,19 +136,19 @@ final class AirQUITests: XCTestCase {
     }
 
     func testTodayOffersCheckInWithoutAnAirReading() {
-        let app = launch(extraArguments: ["-uiTestNoReading", "YES", "-uiTestLocationDenied", "YES"], detailsOpen: false)
+        let app = launch(extraArguments: ["-uiTestNoReading", "YES", "-uiTestLocationDenied", "YES"])
         startTodaysCheckIn(app)
-        XCTAssertTrue(app.buttons["checkInDay-today"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["No symptoms"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Skip"].exists)
     }
 
     func testReportAndHistoryRefreshAfterSavingToday() {
         let app = launch(route: "report", extraArguments: ["-uiTestHistoryPeriod", "30"])
         XCTAssertTrue(app.buttons["shareReportSummary"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@", "reportCoverage-Check-ins", "0 of 30 days")).firstMatch.waitForExistence(timeout: 5))
+        expectReportCoverage("0 of 30 days", in: app)
         app.tabBars.buttons["History"].tap()
         XCTAssertTrue(app.staticTexts["Your history starts with a day"].waitForExistence(timeout: 10))
         app.tabBars.buttons["Today"].tap()
-        startTodaysCheckIn(app)
         startTodaysCheckIn(app)
         app.buttons["No symptoms"].tap()
         next(app)
@@ -143,28 +157,69 @@ final class AirQUITests: XCTestCase {
         app.buttons["Done"].tap()
         app.tabBars.buttons["Report"].tap()
         XCTAssertTrue(app.buttons["shareReportSummary"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@", "reportCoverage-Check-ins", "1 of 30 days")).firstMatch.waitForExistence(timeout: 5))
+        expectReportCoverage("1 of 30 days", in: app)
         app.tabBars.buttons["History"].tap()
-        XCTAssertTrue(app.staticTexts["Symptoms & surroundings"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["historyCheckInSummary"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["Your history starts with a day"].exists)
     }
 
     func testHistoryAndReportShareTheChosenPeriodAndCurrentData() {
         let app = launch(route: "trends", extraArguments: ["-uiTestHistory", "YES", "-uiTestHistoryPeriod", "30"])
-        XCTAssertTrue(app.staticTexts["Symptoms & surroundings"].waitForExistence(timeout: 10))
+        let summary = app.staticTexts["historyCheckInSummary"]
+        XCTAssertTrue(summary.waitForExistence(timeout: 10))
+        XCTAssertEqual(summary.label, "No symptoms reported")
         app.segmentedControls.buttons["7 days"].tap()
-        XCTAssertTrue(app.staticTexts["In these 7 days"].waitForExistence(timeout: 5))
+        XCTAssertTrue(summary.waitForExistence(timeout: 5))
         app.tabBars.buttons["Report"].tap()
         let share = app.buttons["shareReportSummary"]
         XCTAssertTrue(share.waitForExistence(timeout: 10))
         XCTAssertTrue(app.segmentedControls.buttons["7 days"].isSelected)
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@", "reportCoverage-Check-ins", "6 of 7 days")).firstMatch.exists)
+        expectReportCoverage("6 of 7 days", in: app)
         app.segmentedControls.buttons["30 days"].tap()
         XCTAssertTrue(share.waitForExistence(timeout: 10))
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@", "reportCoverage-Check-ins", "16 of 30 days")).firstMatch.exists)
+        expectReportCoverage("16 of 30 days", in: app)
         app.tabBars.buttons["History"].tap()
         XCTAssertTrue(app.segmentedControls.buttons["30 days"].isSelected)
-        XCTAssertTrue(app.staticTexts["In these 30 days"].waitForExistence(timeout: 5))
+        XCTAssertTrue(summary.waitForExistence(timeout: 5))
+        XCTAssertEqual(summary.label, "No symptoms reported")
+    }
+
+    func testHistoryDayInspectionDistinguishesAnUnansweredDayFromZeroUses() {
+        let app = launch(route: "trends", extraArguments: ["-uiTestHistory", "YES", "-uiTestHistoryPeriod", "30"])
+        let inspect = app.buttons["View a day"]
+        XCTAssertTrue(inspect.waitForExistence(timeout: 10))
+        inspect.tap()
+
+        let elements = app.descendants(matching: .any)
+        let symptoms = elements["historyDay-symptoms"].firstMatch
+        let inhaler = elements["historyDay-rescue"].firstMatch
+        let air = elements["historyDay-air"].firstMatch
+        let pollen = elements["historyDay-pollen"].firstMatch
+        XCTAssertTrue(inhaler.waitForExistence(timeout: 5))
+        XCTAssertEqual(symptoms.value as? String, "No check-in")
+        XCTAssertEqual(inhaler.value as? String, "No check-in")
+        XCTAssertEqual(air.value as? String, "No saved AQI")
+        XCTAssertEqual(pollen.value as? String, "No pollen forecast")
+
+        app.buttons["Previous day"].tap()
+        XCTAssertEqual(symptoms.value as? String, "No daytime symptoms")
+        XCTAssertEqual(inhaler.value as? String, "0 uses")
+        XCTAssertEqual(air.value as? String, "Google 59 · WAQI 52")
+        XCTAssertEqual(pollen.value as? String, "1 of 5")
+        app.navigationBars.buttons["Done"].tap()
+        XCTAssertFalse(inhaler.exists)
+    }
+
+    func testHistoryKeepsChartsBehindTheComparisonAction() {
+        let app = launch(route: "trends", extraArguments: ["-uiTestHistory", "YES"])
+        let compare = app.buttons["Compare with air & pollen"]
+        XCTAssertTrue(compare.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["Symptoms & surroundings"].exists)
+        compare.tap()
+        XCTAssertTrue(app.staticTexts["Symptoms & surroundings"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["Done"].tap()
+        XCTAssertTrue(compare.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Symptoms & surroundings"].exists)
     }
 
     func testOnlyAtNightClearsDaytimeSymptomsAndSkipsTheirQuestions() {
@@ -200,6 +255,7 @@ final class AirQUITests: XCTestCase {
 
     func testTappingAPollutantOpensItsExplainer() throws {
         let app = launch()
+        openMetric("airQuality", title: "Air quality", in: app)
         // UI-test mode serves a fixed, fresh reading (no network, no real data).
         let pollutant = app.buttons["PM2.5"]
         reveal(pollutant, in: app)
@@ -215,6 +271,11 @@ final class AirQUITests: XCTestCase {
         let link = try XCTUnwrap(URL(string: "airq://trends"))
         app.open(link)
         XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 10))
+        let listenLink = try XCTUnwrap(URL(string: "airq://listen"))
+        app.open(listenLink)
+        XCTAssertTrue(app.navigationBars["Listen"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.tabBars.buttons["Listen"].isSelected)
+        XCTAssertTrue(app.buttons["Start listening"].isEnabled)
     }
 
     func testCheckInDraftSurvivesASwitchToHistory() {
@@ -248,27 +309,47 @@ final class AirQUITests: XCTestCase {
     }
 
     func testTheDashboardShowsTheEssentialsFirstAndDetailsOnRequest() {
-        let app = launch(detailsOpen: nil)
-        let show = app.buttons["Show details"], hide = app.buttons["Hide details"]
-        for _ in 0..<6 where !show.exists && !hide.exists { app.swipeUp() }
-        XCTAssertTrue(show.waitForExistence(timeout: 10) || hide.waitForExistence(timeout: 2))
-        // The choice persists between launches, so set the starting state explicitly.
-        if hide.exists { hide.tap() }
-        XCTAssertTrue(show.waitForExistence(timeout: 5))
-        // The essentials: the verdicts in words and what they mean; the health screens are tabs.
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Air quality index 42, Good'")).firstMatch.exists)
-        XCTAssertTrue(app.buttons["What today's air means"].exists)
-        XCTAssertTrue(app.buttons["Check in for today"].exists)
-        // The technical sections are not on screen yet.
+        let app = launch()
+        let air = app.buttons["todayMetric-airQuality"]
+        let pollen = app.buttons["todayMetric-pollen"]
+        XCTAssertTrue(air.waitForExistence(timeout: 10))
+        XCTAssertTrue(air.isHittable && pollen.isHittable)
+        XCTAssertTrue(air.label.contains("little or no risk"), air.label)
+        XCTAssertTrue(pollen.label.contains("may still notice symptoms"), pollen.label)
+        XCTAssertFalse(app.staticTexts["Your day, in context"].exists)
+        XCTAssertFalse(app.buttons["Show details"].exists)
+        air.tap()
+        XCTAssertTrue(app.navigationBars["Air quality"].waitForExistence(timeout: 5))
+        reveal(app.staticTexts["Pollutants"], in: app)
+        XCTAssertFalse(app.staticTexts["Pollen by type"].exists)
+        app.navigationBars["Air quality"].buttons.firstMatch.tap()
+        pollen.tap()
+        XCTAssertTrue(app.navigationBars["Pollen"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Pollen by type"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Pollutants"].exists)
-        XCTAssertFalse(app.staticTexts["Last 48 hours"].exists)
-        show.tap()
-        XCTAssertTrue(hide.waitForExistence(timeout: 5))
-        for _ in 0..<6 where !app.staticTexts["Pollutants"].exists { app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["Pollutants"].exists)
-        // Leave the persisted choice at its default for other runs.
-        for _ in 0..<12 where !hide.isHittable { app.swipeDown() }
-        hide.tap()
+    }
+
+    func testTodayStacksReadingsAtAccessibilityTextSizes() {
+        let app = launch(extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let air = app.buttons["todayMetric-airQuality"]
+        let pollen = app.buttons["todayMetric-pollen"]
+        XCTAssertTrue(air.waitForExistence(timeout: 10))
+        XCTAssertTrue(pollen.exists)
+        XCTAssertGreaterThanOrEqual(pollen.frame.minY, air.frame.maxY)
+        XCTAssertEqual(pollen.frame.width, air.frame.width, accuracy: 2)
+    }
+
+    func testListenTabOpensPastSessionsWithoutADuplicateTodayCard() {
+        let app = launch()
+        XCTAssertTrue(app.buttons["todayMetric-airQuality"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Listen for coughs"].exists)
+        let listenTab = app.tabBars.buttons["Listen"]
+        listenTab.tap()
+        XCTAssertTrue(app.navigationBars["Listen"].waitForExistence(timeout: 5))
+        XCTAssertTrue(listenTab.isSelected)
+        XCTAssertTrue(app.buttons["Start listening"].isEnabled)
+        app.buttons["Past listening sessions"].tap()
+        XCTAssertTrue(app.navigationBars["Sessions"].waitForExistence(timeout: 5))
     }
 
     /// Xcode's own accessibility audit (contrast, hit-region size, clipped or truncated text, missing
@@ -323,11 +404,15 @@ final class AirQUITests: XCTestCase {
 
     func testReportOffersAPreviewAndShareableSummary() {
         let app = launch(route: "report", extraArguments: ["-uiTestHistoryPeriod", "30"])
-        XCTAssertTrue(app.buttons["shareReportSummary"].waitForExistence(timeout: 10))
+        let sharePDF = app.buttons["shareReportSummary"]
+        XCTAssertTrue(sharePDF.waitForExistence(timeout: 10))
+        XCTAssertEqual(sharePDF.label, "Share PDF")
+        XCTAssertFalse(app.staticTexts["Weekly timeline"].exists)
+        XCTAssertFalse(app.staticTexts["Coverage"].exists)
+        app.buttons["previewReport"].tap()
         XCTAssertTrue(app.staticTexts["Coverage"].exists)
-        let heading = app.staticTexts["What these numbers are"]
-        reveal(heading, in: app)
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'not a diagnosis'")).firstMatch.exists)
+        reveal(app.staticTexts["Weekly timeline"], in: app)
+        app.navigationBars["Report preview"].buttons["Done"].tap()
         let raw = app.buttons["Export raw records"]
         reveal(raw, in: app)
         raw.tap()
@@ -335,41 +420,59 @@ final class AirQUITests: XCTestCase {
         reveal(app.buttons["Create export"], in: app)
     }
 
+    func testReportPDFCanBeSentToPrint() {
+        let app = launch(route: "report", extraArguments: ["-uiTestHistory", "YES", "-uiTestHistoryPeriod", "90"])
+        let share = app.buttons["shareReportSummary"]
+        reveal(share, in: app)
+        share.tap()
+        let print = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Print")).firstMatch
+        XCTAssertTrue(print.waitForExistence(timeout: 10), app.debugDescription)
+    }
+
     func testTheWelcomeExplainsTheAppOnceThenShowsTheDashboard() {
-        let app = launch(extraArguments: ["-showWelcome", "YES"], detailsOpen: nil)
+        let app = launch(extraArguments: ["-showWelcome", "YES"])
         XCTAssertTrue(app.staticTexts["Welcome to airQ"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Your days, together"].exists)
         XCTAssertTrue(app.staticTexts["Your notes stay on this iPhone"].exists)
         // The welcome fills the Air tab only: the other tabs stay usable, and the reading (and so the
         // location prompt) waits until the person continues.
         XCTAssertTrue(app.tabBars.buttons["History"].exists)
-        XCTAssertFalse(app.buttons["What today's air means"].exists)
+        XCTAssertFalse(app.buttons["todayMetric-airQuality"].exists)
         app.buttons["Get started"].tap()
-        XCTAssertTrue(app.buttons["What today's air means"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["todayMetric-airQuality"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["Welcome to airQ"].exists)
     }
 
     func testTheNumbersCanBeExplainedAndTodayIsMarked() {
         let app = launch()
-        let link = app.buttons["What do these numbers mean?"]
-        XCTAssertTrue(link.waitForExistence(timeout: 10))
-        link.tap()
-        XCTAssertTrue(app.navigationBars["What the numbers mean"].waitForExistence(timeout: 5))
-        // The fixture reading is Good (AQI 42) with pollen Low (2): each scale marks its own level. The
-        // list is lazy (rows off screen aren't in the tree), so look for each marker where it appears.
-        func row(_ prefix: String) -> XCUIElement {
-            app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", prefix)).firstMatch
-        }
-        XCTAssertTrue(row("Good, 0–50, where you are now").waitForExistence(timeout: 5))
-        XCTAssertFalse(row("Moderate, 51–100, where you are now").exists)
-        for _ in 0..<8 where !row("Low, 2, where you are now").exists { app.swipeUp() }
-        XCTAssertTrue(row("Low, 2, where you are now").exists)
-        app.buttons["Done"].tap()
-        XCTAssertTrue(link.waitForExistence(timeout: 5))
+        openMetric("airQuality", title: "Air quality", in: app)
+        let aqi = app.descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@", "Good, 0–50, selected level")).firstMatch
+        reveal(aqi, in: app)
+        XCTAssertFalse(app.staticTexts["Pollen scale"].exists)
+        app.navigationBars["Air quality"].buttons.firstMatch.tap()
+        openMetric("pollen", title: "Pollen", in: app)
+        let pollen = app.descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@", "Low, 2, selected level")).firstMatch
+        reveal(pollen, in: app)
+        XCTAssertFalse(app.staticTexts["AQI scale"].exists)
+    }
+
+    func testTodayShowsSevereSavedAirAndUnavailablePollen() {
+        let app = launch(extraArguments: ["-uiTestAQI", "160", "-uiTestNoPollen", "YES",
+                                          "-uiTestStaleReading", "YES", "-uiTestLocationDenied", "YES"])
+        let air = app.buttons["todayMetric-airQuality"]
+        XCTAssertTrue(air.waitForExistence(timeout: 10))
+        XCTAssertTrue(air.label.contains("160, Unhealthy"))
+        XCTAssertTrue(air.label.contains("Avoid strenuous outdoor activity"))
+        XCTAssertTrue(app.buttons["todayMetric-pollen"].label.contains("forecast unavailable"))
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", "Last saved")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Showing your last reading"].exists)
     }
 
     func testMonthSummaryExplainsWhenThereIsNoHistoryYet() {
         let app = launch()
+        openMetric("airQuality", title: "Air quality", in: app)
         let heading = app.staticTexts["Past 30 days"]
         for _ in 0..<8 where !heading.exists { app.swipeUp() }
         XCTAssertTrue(heading.waitForExistence(timeout: 10))
@@ -465,11 +568,7 @@ final class AirQUITests: XCTestCase {
 
     func testEraseInvalidatesAReportThatWasAlreadyOpen() {
         let app = launch(route: "report", extraArguments: ["-uiTestHistory", "YES", "-uiTestHistoryPeriod", "30"])
-        func coverage(_ text: String) -> XCUIElement {
-            app.descendants(matching: .any).matching(NSPredicate(
-                format: "identifier == %@ AND label CONTAINS %@", "reportCoverage-Check-ins", text)).firstMatch
-        }
-        XCTAssertTrue(coverage("16 of 30 days").waitForExistence(timeout: 10))
+        expectReportCoverage("16 of 30 days", in: app)
         app.tabBars.buttons["More"].tap()
         let eraseScreen = app.buttons.containing(NSPredicate(format: "label BEGINSWITH %@", "Erase all data")).firstMatch
         reveal(eraseScreen, in: app)
@@ -478,8 +577,7 @@ final class AirQUITests: XCTestCase {
         app.buttons["Erase everything"].tap()
         XCTAssertTrue(app.staticTexts["Everything airQ recorded has been erased."].waitForExistence(timeout: 10))
         app.tabBars.buttons["Report"].tap()
-        XCTAssertTrue(coverage("0 of 30 days").waitForExistence(timeout: 10))
-        XCTAssertFalse(coverage("16 of 30 days").exists)
+        expectReportCoverage("0 of 30 days", in: app)
     }
 
     func testAContextEventAppearsAsALaneInTrends() {
@@ -495,6 +593,7 @@ final class AirQUITests: XCTestCase {
         trends.tap()
         XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.navigationBars["Life events"].exists)
+        app.buttons["Compare with air & pollen"].tap()
         reveal(app.buttons["Life events"], in: app)
         app.buttons["Life events"].tap()
         XCTAssertTrue(app.staticTexts["Events you recorded"].waitForExistence(timeout: 5))
@@ -502,6 +601,7 @@ final class AirQUITests: XCTestCase {
 
     func testTappingTheStationOpensItsMap() throws {
         let app = launch()
+        openMetric("airQuality", title: "Air quality", in: app)
         let station = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " away")).firstMatch
         reveal(station, in: app)
         station.tap()
@@ -512,11 +612,14 @@ final class AirQUITests: XCTestCase {
 
     func testEveryScreenIsATabOrListedUnderMore() {
         let app = launch()
-        for tab in ["Today", "History", "Report", "More"] {
+        for tab in ["Today", "Listen", "History", "Report", "More"] {
             XCTAssertTrue(app.tabBars.buttons[tab].waitForExistence(timeout: 10), "\(tab) tab missing")
         }
+        app.tabBars.buttons["Listen"].tap()
+        XCTAssertTrue(app.buttons["Start listening"].waitForExistence(timeout: 5))
         app.tabBars.buttons["More"].tap()
-        for title in ["Listen", "Life events", "Stored data", "Air quality alerts", "About & data", "Erase all data"] {
+        XCTAssertFalse(app.collectionViews.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Listen'")).firstMatch.exists)
+        for title in ["Life events", "Stored data", "Air quality alerts", "About & data", "Erase all data"] {
             XCTAssertTrue(app.buttons.containing(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch.waitForExistence(timeout: 3), "\(title) missing from More")
         }
     }

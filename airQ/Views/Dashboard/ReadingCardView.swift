@@ -1,58 +1,94 @@
 import SwiftUI
 import AirQualityKit
 
-/// A hero card on the dashboard: the AQI or the pollen level.
 struct ReadingCardView: View {
-    let value: Int?
-    let category: String
-    let color: Color
-    let caption: String
-    let spokenLabel: String
+    let metric: DashboardMetric
+    let snapshot: AQSnapshot
 
-    /// Scales with Dynamic Type from a 72 pt base.
-    @ScaledMetric(relativeTo: .largeTitle) private var valueSize = 48.0
+    private var title: String { metric == .airQuality ? "Air quality" : "Pollen forecast" }
 
-    static func aqi(_ aqi: Int) -> ReadingCardView {
-        let category = AirQualityPresentation.category(for: aqi)
-        return ReadingCardView(value: aqi, category: category, color: AirQualityPresentation.color(for: aqi),
-                               caption: "Air quality (AQI)", spokenLabel: "Air quality index \(aqi), \(category)")
+    private var value: String? {
+        switch metric {
+        case .airQuality: "\(snapshot.aqi) AQI"
+        case .pollen: snapshot.pollenIndex.map { "\($0)/5" }
+        }
     }
 
-    static func pollen(_ index: Int?) -> ReadingCardView {
-        let category = PollenPresentation.category(for: index)
-        return ReadingCardView(value: index, category: category, color: PollenPresentation.color(for: index),
-                               caption: "Pollen (0–5)",
-                               spokenLabel: index.map { "Pollen level \($0) of 5, \(category)" } ?? "Pollen unavailable")
+    private var category: String {
+        switch metric {
+        case .airQuality: AirQualityPresentation.category(for: snapshot.aqi)
+        case .pollen: PollenPresentation.category(for: snapshot.pollenIndex)
+        }
+    }
+
+    private var levelColor: Color {
+        switch metric {
+        case .airQuality: AirQualityPresentation.color(for: snapshot.aqi)
+        case .pollen: PollenPresentation.color(for: snapshot.pollenIndex)
+        }
+    }
+
+    private var forecastDay: String? {
+        guard metric == .pollen,
+              let key = snapshot.pollenTypes?.firstDayKey,
+              key != DayKey.local(.now),
+              let date = DayKey.date(key) else { return nil }
+        return date.formatted(Date.FormatStyle(timeZone: .gmt).weekday(.abbreviated).month(.abbreviated).day())
+    }
+
+    private var meaning: String {
+        switch metric {
+        case .airQuality:
+            switch AirQualityPresentation.band(for: snapshot.aqi).range.lowerBound {
+            case 0: "Air pollution poses little or no risk."
+            case 51: "People unusually sensitive to air pollution may be affected."
+            case 101: "People in sensitive groups should take care outdoors."
+            case 151: "Avoid strenuous outdoor activity."
+            case 201: "Avoid outdoor activities."
+            default: "Avoid all outdoor physical activity."
+            }
+        case .pollen:
+            switch snapshot.pollenIndex {
+            case nil: "No forecast is available."
+            case 0: "No pollen is forecast."
+            case 1, 2: "People sensitive to pollen may still notice symptoms."
+            default: "People sensitive to pollen are more likely to notice symptoms."
+            }
+        }
+    }
+
+    var spokenLabel: String {
+        let reading: String
+        switch metric {
+        case .airQuality: reading = "Air quality index \(snapshot.aqi), \(category)"
+        case .pollen:
+            reading = snapshot.pollenIndex.map { "Pollen forecast \($0) of 5, \(category)" } ?? "Pollen forecast unavailable"
+        }
+        return [reading, forecastDay, meaning].compactMap { $0 }.joined(separator: ". ")
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(caption).font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
-            Text(value.map(String.init) ?? "—")
-                .font(.system(size: valueSize, weight: .bold))
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-                // Primary text colour for contrast; the level's colour is the bar below (and the card tint).
-                .foregroundStyle(.primary)
-
-            Capsule()
-                .fill(color)
-                .frame(width: 56, height: 8)
-                .accessibilityHidden(true)
-
-            // The word carries the meaning (colour alone can't): large, and in the primary text colour.
-            Text(category)
-                .font(.title3.weight(.semibold))
-                .multilineTextAlignment(.leading)
-
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.subheadline.weight(.semibold))
+            if let forecastDay {
+                Text(forecastDay).font(.caption).foregroundStyle(.secondary)
+            }
+            if let value {
+                Text(value).font(.title2.weight(.semibold)).monospacedDigit()
+            }
+            Label {
+                Text(category).font(.subheadline.weight(.semibold))
+            } icon: {
+                Circle().fill(levelColor).frame(width: 8, height: 8)
+            }
+            Text(meaning)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .airQCard()
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(spokenLabel)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(14)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .contentShape(RoundedRectangle(cornerRadius: 16))
     }
-}
-
-#Preview {
-    HStack { ReadingCardView.aqi(42); ReadingCardView.pollen(3) }
 }

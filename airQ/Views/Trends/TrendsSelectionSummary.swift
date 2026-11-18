@@ -5,30 +5,53 @@ import RespiratoryKit
 struct TrendsSelectionSummary: View {
     let data: ChartData
     @Binding var selection: Date?
+    var close: (() -> Void)?
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var index: Int? {
-        selection.flatMap { selected in
-            data.days.firstIndex { $0.interval.start <= selected && selected < $0.interval.end }
-        }
+        guard let selection, let day = data.day(at: selection) else { return nil }
+        return data.days.firstIndex { $0.dayKey == day.dayKey }
     }
 
     var body: some View {
-        if let index {
+        if let index, let first = data.days.first, let last = data.days.last {
             let day = data.days[index]
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 4) {
-                    Text(DayKeys.display(day.dayKey, style: .dateTime.month(.abbreviated).day()))
-                        .font(.headline).frame(maxWidth: .infinity, alignment: .leading)
-                    dayButton("Previous day", symbol: "chevron.left") { move(to: index - 1) }
-                        .disabled(index == 0)
-                    dayButton("Next day", symbol: "chevron.right") { move(to: index + 1) }
-                        .disabled(index == data.days.count - 1)
-                    dayButton("Close day details", symbol: "xmark") { selection = nil }
+            VStack(alignment: .leading, spacing: 8) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        datePicker(for: day, in: first.interval.start...last.interval.start)
+                        Spacer(minLength: 0)
+                        navigation(for: index)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        datePicker(for: day, in: first.interval.start...last.interval.start)
+                        navigation(for: index)
+                    }
                 }
-                Text(symptomSummary(day)).font(.subheadline.weight(.medium))
-                Text(environmentSummary(day)).font(.footnote).foregroundStyle(.secondary)
+                HistoryDayValues(data: data, day: day, stacked: typeSize.isAccessibilitySize)
             }
             .accessibilityElement(children: .contain)
+        }
+    }
+
+    private func datePicker(for day: ChartData.Day, in range: ClosedRange<Date>) -> some View {
+        DatePicker("Choose a date", selection: Binding(get: { day.interval.start }, set: { selection = $0 }),
+                   in: range, displayedComponents: .date)
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .frame(minHeight: 44)
+            .accessibilityIdentifier("historyDayDate")
+    }
+
+    private func navigation(for index: Int) -> some View {
+        HStack(spacing: 0) {
+            dayButton("Previous day", symbol: "chevron.backward") { move(to: index - 1) }
+                .disabled(index == 0)
+            dayButton("Next day", symbol: "chevron.forward") { move(to: index + 1) }
+                .disabled(index == data.days.count - 1)
+            if let close {
+                dayButton("Close day details", symbol: "xmark", action: close)
+            }
         }
     }
 
@@ -43,33 +66,74 @@ struct TrendsSelectionSummary: View {
         guard data.days.indices.contains(index) else { return }
         selection = data.days[index].interval.start
     }
+}
 
-    private func symptomSummary(_ day: ChartData.Day) -> String {
-        guard let point = data.checkIns.first(where: { $0.day == day.interval.start }) else {
-            return "No check-in recorded"
-        }
-        let symptoms: String
-        switch point.severity {
-        case 0?: symptoms = "No daytime symptoms"
-        case let severity?: symptoms = "Daytime symptoms: \(severity) of 3"
-        case nil: symptoms = point.daytimeSymptoms == true ? "Daytime symptoms; severity not answered" : "Daytime symptoms not answered"
-        }
-        return point.nightWaking == true ? "\(symptoms) · Woke at night" : symptoms
+private struct HistoryDayValues: View {
+    let data: ChartData
+    let day: ChartData.Day
+    let stacked: Bool
+
+    private var checkIn: ChartData.CheckInPoint? {
+        data.checkIns.first { $0.day == day.interval.start }
     }
 
-    private func environmentSummary(_ day: ChartData.Day) -> String {
-        let contains: (Date) -> Bool = { day.interval.start <= $0 && $0 < day.interval.end }
+    var body: some View {
+        let checkIn = checkIn
+        let inhaler = checkIn?.rescueInhalerUses.map { $0 == 1 ? "1 use" : "\($0) uses" }
+            ?? (checkIn == nil ? "No check-in" : "Not answered")
+        let pollen = data.pollen.lazy.filter { $0.day == day.interval.start }.map(\.upi).max()
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 16, alignment: .topLeading), count: stacked ? 1 : 2)
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+            metric("Symptoms", id: "symptoms", value: symptomsText(for: checkIn))
+            metric("Rescue inhaler", id: "rescue", value: inhaler)
+            metric("Highest saved AQI", id: "air", value: airQuality())
+            metric("Pollen forecast", id: "pollen", value: pollen.map { "\($0) of 5" } ?? "No pollen forecast")
+        }
+    }
+
+    private func metric(_ title: String, id: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(value).font(.subheadline.weight(.medium))
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(value)
+        .accessibilityIdentifier("historyDay-\(id)")
+    }
+
+    private func symptomsText(for point: ChartData.CheckInPoint?) -> String {
+        guard let point else { return "No check-in" }
+        let daytime: String
+        switch point.severity {
+        case 0?: daytime = "No daytime symptoms"
+        case let severity?:
+            let label = CheckInQuestionSet.Severity(rawValue: severity).map(CheckInLabels.severity) ?? "\(severity) of 3"
+            daytime = "\(label) daytime symptoms"
+        case nil:
+            daytime = point.daytimeSymptoms == true ? "Daytime symptoms, severity unanswered" : "Daytime symptoms unanswered"
+        }
+        switch point.nightWaking {
+        case true?: return "\(daytime) · Woke last night"
+        case false?: return daytime
+        case nil: return "\(daytime) · Night waking unanswered"
+        }
+    }
+
+    private func airQuality() -> String {
         var parts: [String] = []
-        if let peak = data.hourly.filter({ contains($0.date) }).map(\.value).max() {
-            parts.append("Hourly AQI up to \(peak)")
+        if let hourly = peakAQI(in: data.hourly) {
+            parts.append("Google \(hourly)")
         }
-        if let peak = data.waqi.filter({ contains($0.date) }).map(\.value).max() {
-            parts.append("Station AQI up to \(peak)")
+        if let station = peakAQI(in: data.waqi) {
+            parts.append("WAQI \(station)")
         }
-        if parts.isEmpty { parts.append("No air reading") }
-        if let pollen = data.pollen.filter({ $0.day == day.interval.start }).map(\.upi).max() {
-            parts.append("Pollen up to \(pollen) of 5")
-        } else { parts.append("No pollen forecast") }
-        return parts.joined(separator: " · ")
+        return parts.isEmpty ? "No saved AQI" : parts.joined(separator: " · ")
+    }
+
+    private func peakAQI(in readings: [EnvironmentSeries.AQIPoint]) -> Int? {
+        readings.lazy.filter { day.interval.start <= $0.date && $0.date < day.interval.end }.map(\.value).max()
     }
 }

@@ -109,6 +109,8 @@ public struct ChartData: Sendable, Equatable {
     public let hourOfDay: [HourBin]
     /// Coverage before overlapping histories from different areas were excluded.
     public var airCoverage: AirCoverage? = nil
+    /// A session started within or overlapped the domain, even if it ended before its first window.
+    public var hasListeningSessions = false
 
     /// Whether any hour has an event or listening time (otherwise there is nothing to show).
     public var hasHourOfDayData: Bool { hourOfDay.contains { $0.count > 0 || $0.listeningSeconds > 0 } }

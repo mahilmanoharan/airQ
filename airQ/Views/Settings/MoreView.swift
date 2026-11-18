@@ -4,7 +4,6 @@ struct MoreView: View {
     private let headings = ["Record a little more", "Preferences", "Your data", ""]
     private func subtitle(_ route: AppRoute) -> String {
         switch route {
-        case .listen: "Optional sound checks, processed on your iPhone"
         case .contextEvents: "Note travel, illness or changes in routine"
         case .alerts: "Choose when airQ lets you know about the air"
         case .records: "See what is saved and its coverage"

@@ -1,6 +1,16 @@
-# airQ handoff (current state, branch `cook`, 2026-11-17)
+# airQ handoff (current state, branch `cook`, 2026-11-18)
 
 Local feature commits and publishing `cook` to GitHub are authorized by the user; **do not merge with or change main**. The chronological notes and per-round review reasoning are archived in `docs/handoff-history.md`; this file is the current picture. Build **4** (SchemaV3 + check-in question set 2).
+
+## Today, History and printable Report redesign
+
+- Today shows location, reading time, and AQI and pollen in a horizontal strip that stacks at accessibility text sizes. Meaning is inline. Tapping a reading card zooms into its details and scale. Tomorrow’s forecast precedes the check-in invitation. The reading and action cards have no side arrows.
+- A new check-in zooms into the question flow after the model confirms there is no saved entry. Existing entries and unavailable record state route through the check-in hub. The first question says “Answer as much as you like.”
+- **Listen** is the second tab and the in-app entry point for capture. `airq://listen` opens the root of its navigation stack, including when a listening tool was open. **Start listening** begins capture. Leaving the tab ends capture, and erasing the record clears the listening stack and live results.
+- History leads with the latest check-in. **View a day** opens a calendar and day-by-day details. **Compare with air & pollen** opens the aligned charts, and **Listening history** appears when there is listening data or a session in the selected period, including an interrupted session with no sound window.
+- Report shows the period, a plain-language summary, and **Preview report** and **Share PDF**. The preview contains clinical measures, coverage, weekly rows, and the plain-text summary. The one-page US Letter PDF is generated in memory and omits free-text life-event notes. Raw export remains under Advanced.
+- At the publishing checkpoint, both package suites passed (121 AirQualityKit, 198 RespiratoryKit) along with all 10 targeted UI tests on iPhone 17 Pro / iOS 26.4 (`/tmp/airq-cook-listen-single-entry.xcresult`). These covered the single Listen entry, past sessions, deep links, Today card navigation, check-in draft retention, History day details and life events, linked History/Report periods, and the PDF’s Print option. Prior runs covered both accessibility audit groups, Today’s large text sizing, Report preview, and erase invalidation. A sample 90-day PDF was visually checked on one page.
+- The build emits three existing SwiftUI `@Entry` closure comparison warnings in `AppTab.swift`. Real microphone capture still needs a device check.
 
 ## November lifecycle and privacy hardening
 

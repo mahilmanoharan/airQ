@@ -1,21 +1,23 @@
 import SwiftUI
 import RespiratoryKit
 
-/// A descriptive workspace: symptoms and environmental readings share a time axis.
 struct TrendsView: View {
     @State private var model: ChartViewModel
     @State private var selection: Date?
+    @State private var detail: HistoryDetail?
+    @State private var loadedKey: HistoryLoadKey?
+    @State private var retry = 0
     @Environment(\.historyPeriod) private var period
     @Environment(\.setHistoryPeriod) private var setPeriod
     @Environment(\.recordRevision) private var revision
     @Environment(\.selectedTab) private var tab
     @Environment(\.openRoute) private var openRoute
-    @State private var loadedKey: HistoryLoadKey?
-    @State private var retry = 0
 
     private var loadKey: HistoryLoadKey {
         HistoryLoadKey(period: period, revision: revision, isActive: tab == .trends, retry: retry)
     }
+
+    private var isLoading: Bool { model.isLoading || loadedKey != loadKey }
 
     init(records: RecordStore, detections: DetectionStore?) {
         _model = State(initialValue: ChartViewModel(records: records, detections: detections,
@@ -23,77 +25,87 @@ struct TrendsView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Symptoms beside air quality and pollen.")
-                        .font(.subheadline).foregroundStyle(.secondary)
-                    Picker("History period", selection: Binding(get: { period }, set: { setPeriod($0) })) {
-                        ForEach(HistoryPeriod.allCases) { span in Text(span.title).tag(span) }
-                    }
-                    .pickerStyle(.segmented)
-                    if model.isLoading || loadedKey != loadKey {
-                        ProgressView("Loading your history…")
-                            .frame(maxWidth: .infinity, minHeight: 160)
-                    } else if let message = model.errorMessage {
-                        ContentUnavailableView {
-                            Label("History couldn't load", systemImage: "exclamationmark.triangle")
-                        } description: { Text(message) } actions: {
-                            Button("Try again") { retry += 1 }.buttonStyle(.bordered)
-                        }
-                    } else if let data = model.data {
-                        HistoryCoverageCard(data: data)
-                        if data.hasHistoryContent {
-                            TrendsPanels(data: data, selection: $selection).id("comparison")
-                            if let table = model.symptomDays, !table.isEmpty {
-                                SymptomDaysCard(table: table).id("symptomDays")
-                            }
-                            HistoryDetails(data: data, selection: $selection)
-                            Button("Prepare a report", systemImage: "doc.text") { openRoute(.report) }
-                                .buttonStyle(.bordered).controlSize(.large)
-                                .frame(maxWidth: .infinity)
-                            DisclosureGroup("About these readings") { TrendsLegend().padding(.top, 8) }
-                                .airQCard()
-                        } else {
-                            HistoryEmptyState()
-                        }
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Picker("History period", selection: Binding(get: { period }, set: { setPeriod($0) })) {
+                    ForEach(HistoryPeriod.allCases) { span in Text(span.title).tag(span) }
                 }
-                .padding()
-                .frame(maxWidth: 720)
-                .frame(maxWidth: .infinity)
+                .pickerStyle(.segmented)
+
+                historyContent { data in
+                    HistoryJournal(data: data) { open($0, data: data) }
+                }
             }
-            #if DEBUG
-            .task(id: model.data != nil) {
-                guard model.data != nil, let anchor = UserDefaults.standard.string(forKey: "trendsScrollTo") else { return }
-                await Task.yield()
-                proxy.scrollTo(anchor == "hourOfDay" ? "listening" : anchor, anchor: .top)
-            }
-            #endif
+            .padding()
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AirQStyle.page)
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if let data = model.data, loadedKey == loadKey, selection != nil, !model.isLoading, model.errorMessage == nil {
-                TrendsSelectionSummary(data: data, selection: $selection)
-                    .padding(.horizontal).padding(.vertical, 8)
-                    .frame(maxWidth: 720)
-                    .frame(maxWidth: .infinity)
-                    .background(.regularMaterial)
+        .sheet(item: $detail) { destination in
+            NavigationStack {
+                historyContent { data in
+                    HistoryDetailPage(detail: destination, data: data, symptomDays: model.symptomDays,
+                                      selection: $selection)
+                }
+                .navigationTitle(destination.title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) { Button("Done") { detail = nil } }
+                }
+            }
+            .environment(\.openRoute) { route in
+                detail = nil
+                openRoute(route)
             }
         }
+        .onChange(of: period) { selection = nil }
         .task(id: loadKey) {
-            guard loadKey.isActive else { return }
             let requested = loadKey
-            loadedKey = nil
-            selection = nil
+            guard requested.isActive else {
+                detail = nil
+                selection = nil
+                return
+            }
             model.span = requested.period
             await model.load()
             guard !Task.isCancelled, requested == loadKey else { return }
+            if model.errorMessage == nil, let data = model.data {
+                if let selection, data.day(at: selection) == nil { self.selection = data.days.last?.interval.start }
+                #if DEBUG
+                if loadedKey == nil, let anchor = UserDefaults.standard.string(forKey: "trendsScrollTo") {
+                    if anchor == "hourOfDay" {
+                        if data.hasListeningHistory { open(.listening, data: data) }
+                    } else if data.hasHistoryContent {
+                        open(.comparison, data: data)
+                    }
+                }
+                #endif
+            }
             loadedKey = requested
         }
         .refreshable { retry += 1 }
         .tint(AirQStyle.accent)
+    }
+
+    @ViewBuilder private func historyContent<Content: View>(@ViewBuilder _ content: (ChartData) -> Content) -> some View {
+        if isLoading {
+            ProgressView("Loading your history…")
+                .frame(maxWidth: .infinity, minHeight: 160)
+        } else if let message = model.errorMessage {
+            ContentUnavailableView {
+                Label("History couldn't load", systemImage: "exclamationmark.triangle")
+            } description: { Text(message) } actions: {
+                Button("Try again") { retry += 1 }.buttonStyle(.bordered)
+            }
+        } else if let data = model.data {
+            content(data)
+        }
+    }
+
+    private func open(_ destination: HistoryDetail, data: ChartData) {
+        if destination == .day && selection == nil { selection = data.days.last?.interval.start }
+        detail = destination
     }
 }

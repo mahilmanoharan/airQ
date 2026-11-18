@@ -13,6 +13,7 @@ public final class CheckInViewModel {
     public private(set) var rows: [CheckInRow] = []
     public private(set) var records: [DailyRecordSnapshot] = []
     public private(set) var isLoading = false
+    private var hasLoadedCheckIns = false
     public private(set) var isSaving = false
     public private(set) var errorMessage: String?
     public private(set) var lastSavedAt: Date?
@@ -70,6 +71,7 @@ public final class CheckInViewModel {
             try Task.checkCancellation()
             self.rows = rows
             self.records = records
+            hasLoadedCheckIns = true
             // A reload (returning to the app, the tab badge) must never wipe answers being given.
             if !isEditing { resetDraft() }
             errorMessage = nil
@@ -137,6 +139,11 @@ public final class CheckInViewModel {
 
     /// Whether today has any saved check-in (a quick "no symptoms" entry included).
     public var hasCheckedInToday: Bool { recentDays.last?.isCheckedIn == true }
+
+    /// Today can skip the check-in hub only when the saved record confirms the day is empty.
+    public var canStartNewCheckInToday: Bool {
+        hasLoadedCheckIns && !isLoading && errorMessage == nil && !isEditing && !hasCheckedInToday
+    }
 
     /// Starts filling in `target` from its saved answers (or blank), dropping any edits not saved.
     public func begin(_ target: Target) {

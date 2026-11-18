@@ -7,7 +7,7 @@ struct HistorySymptomsPanel: View {
     @Binding var selection: Date?
 
     var body: some View {
-        TrendsPanel(title: "Daytime symptoms", data: data, selection: $selection, height: 95) {
+        TrendsPanel(title: "Daytime symptoms", data: data, selection: $selection, height: 95, yTicks: [0, 1, 2, 3]) {
             ForEach(data.checkIns, id: \.day) { point in
                 if let severity = point.severity {
                     PointMark(x: .value("Day", point.day, unit: .day), y: .value("Severity", severity))
@@ -19,17 +19,7 @@ struct HistorySymptomsPanel: View {
             }
         }
         .chartYScale(domain: -0.2...3.2)
-        .chartYAxis {
-            AxisMarks(values: [0, 1, 2, 3]) { mark in
-                AxisGridLine()
-                AxisValueLabel {
-                    if let value = mark.as(Int.self) {
-                        Text(value == 0 ? "None" : "\(value)")
-                    }
-                }
-            }
-        }
-        Text("1 mild · 2 moderate · 3 severe. Gaps mean no severity answer.")
+        Text("0 none · 1 mild · 2 moderate · 3 severe")
             .font(.caption).foregroundStyle(.secondary)
         if data.checkIns.contains(where: { $0.daytimeSymptoms == true && $0.severity == nil }) {
             Text("Some days report symptoms without a severity; inspect the day for details.")
@@ -43,7 +33,7 @@ struct HistoryAirPanel: View {
     @Binding var selection: Date?
 
     var body: some View {
-        TrendsPanel(title: "Air quality (AQI)", data: data, selection: $selection, height: 110) {
+        TrendsPanel(title: "Air quality (AQI)", data: data, selection: $selection, height: 110, alignsYAxis: true) {
             ForEach(Array(data.hourly.enumerated()), id: \.offset) { _, point in
                 PointMark(x: .value("Time", point.date), y: .value("AQI", point.value))
                     .symbolSize(8)
@@ -59,7 +49,7 @@ struct HistoryAirPanel: View {
                     .accessibilityValue("Station AQI \(point.value)")
             }
         }
-        .chartForegroundStyleScale(range: [Color.blue, Color.orange])
+        .chartForegroundStyleScale(domain: ["Hourly · Google", "Station · WAQI"], range: [Color.blue, Color.orange])
     }
 }
 
@@ -68,7 +58,7 @@ struct HistoryPollenPanel: View {
     @Binding var selection: Date?
 
     var body: some View {
-        TrendsPanel(title: "Pollen forecast (0–5)", data: data, selection: $selection, height: 110) {
+        TrendsPanel(title: "Pollen forecast (0–5)", data: data, selection: $selection, height: 110, yTicks: [0, 1, 3, 5]) {
             ForEach(Array(data.pollen.enumerated()), id: \.offset) { _, bar in
                 BarMark(x: .value("Day", bar.day, unit: .day), y: .value("Pollen", bar.upi))
                     .foregroundStyle(by: .value("Type", TrendsLabels.pollen(bar.code)))

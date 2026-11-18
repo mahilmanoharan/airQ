@@ -1,9 +1,9 @@
 import SwiftUI
 import RespiratoryKit
 
-/// Everyday work is Today → History → Report. Optional tools live under More.
+/// The core screens have their own tabs. Settings and record tools live under More.
 enum AppTab: String, Hashable, CaseIterable {
-    case air, trends, report, more
+    case air, listen, trends, report, more
 }
 
 extension EnvironmentValues {
@@ -33,9 +33,10 @@ extension AppRoute {
     var tab: AppTab {
         switch self {
         case .checkIn: .air
+        case .listen: .listen
         case .trends: .trends
         case .report, .export: .report
-        case .listen, .contextEvents, .records, .about, .alerts, .erase: .more
+        case .contextEvents, .records, .about, .alerts, .erase: .more
         }
     }
 }
@@ -48,6 +49,9 @@ struct TabDestination: Equatable {
     init(_ routes: [AppRoute]) {
         guard let route = routes.first else { tab = .air; return }
         tab = route.tab
-        path = route == .trends || route == .report ? Array(routes.dropFirst()) : routes
+        switch route {
+        case .listen, .trends, .report: path = Array(routes.dropFirst())
+        default: path = routes
+        }
     }
 }

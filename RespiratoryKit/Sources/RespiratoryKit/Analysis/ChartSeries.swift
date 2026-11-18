@@ -87,6 +87,9 @@ public enum ChartSeries {
         .sorted { $0.day < $1.day }
 
         let air = AirCoverage.resolve(environment.hourly.filter { $0.date >= domain.start && $0.date < domain.end })
+        let hasListeningSessions = sessions.contains { session in
+            session.startedAt < domain.end && (session.startedAt >= domain.start || session.knownEnd > domain.start)
+        }
         return ChartData(domain: domain, days: days,
                          waqi: environment.waqi.filter { domain.contains($0.date) },
                          hourly: air.points,
@@ -94,7 +97,7 @@ public enum ChartSeries {
                          context: contextSpans(contextEvents, domain: domain, timeZone: timeZone),
                          detectionLabel: detectionLabel,
                          hourOfDay: hourOfDay(eventTimes: events.map(\.timestamp), sessions: sessions, domain: domain, timeZone: timeZone),
-                         airCoverage: air.coverage)
+                         airCoverage: air.coverage, hasListeningSessions: hasListeningSessions)
     }
 
     /// Events and listening time by local hour of day. A session is split at every local hour

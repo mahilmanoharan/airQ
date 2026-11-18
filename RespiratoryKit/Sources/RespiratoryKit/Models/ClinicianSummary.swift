@@ -57,6 +57,12 @@ public struct ClinicianSummary: Sendable, Equatable {
     static let lifeEventLimit = 12
 
     public static func make(from data: ChartData, timeZone: TimeZone, tuning: DetectionTuningParameters) -> ClinicianSummary {
+        make(from: data, timeZone: timeZone, tuning: tuning,
+             peaks: DailyPeaks.compute(hourly: data.hourly, timeZone: timeZone), pollenByDay: pollenPeaks(in: data))
+    }
+
+    static func make(from data: ChartData, timeZone: TimeZone, tuning: DetectionTuningParameters,
+                     peaks: (days: [DayPeak], partialDays: Int), pollenByDay: [Date: Int]) -> ClinicianSummary {
         let first = data.days.first?.dayKey ?? ""
         let last = data.days.last?.dayKey ?? ""
 
@@ -69,7 +75,6 @@ public struct ClinicianSummary: Sendable, Equatable {
         for answer in checkIns.compactMap(\.controllerAdherence) { adherence[answer, default: 0] += 1 }
 
         // Air: each whole day in the category of its highest hourly value, days with too few hours left out.
-        let peaks = DailyPeaks.compute(hourly: data.hourly, timeZone: timeZone)
         var air = AirDays()
         for day in peaks.days {
             switch AirQualityBand.of(day.peak) {
@@ -79,10 +84,6 @@ public struct ClinicianSummary: Sendable, Equatable {
             case .unhealthy: air.unhealthy += 1
             }
         }
-
-        // Pollen: the highest type index of each day's latest forecast.
-        var pollenByDay: [Date: Int] = [:]
-        for bar in data.pollen { pollenByDay[bar.day] = max(pollenByDay[bar.day] ?? 0, bar.upi) }
 
         let lifeEvents = data.context.map { span -> LifeEvent in
             let first = span.originalStartDayKey ?? LocalDay(containing: span.start, in: timeZone).key
@@ -112,6 +113,13 @@ public struct ClinicianSummary: Sendable, Equatable {
             listeningSeconds: data.detections.reduce(0) { $0 + $1.listeningSeconds },
             detectionLabel: data.detectionLabel, confidenceThreshold: tuning.confidenceThreshold,
             minInterEventGap: tuning.minInterEventGap)
+    }
+
+    /// The highest type index of each day's latest forecast.
+    static func pollenPeaks(in data: ChartData) -> [Date: Int] {
+        var pollenByDay: [Date: Int] = [:]
+        for bar in data.pollen { pollenByDay[bar.day] = max(pollenByDay[bar.day] ?? 0, bar.upi) }
+        return pollenByDay
     }
 
     /// The summary as plain text that reads the same in a message, a note or a printout.

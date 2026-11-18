@@ -4,6 +4,7 @@ import RespiratoryKit
 /// Every listening session in a range: the exposure denominator behind any detection count.
 struct ListeningSessionsView: View {
     let store: DetectionStore
+    var historyInterval: DateInterval? = nil
     @State private var range: DetectionRange = .lastWeek
     @State private var sessions: [ListeningSessionSnapshot] = []
     @State private var errorMessage: String?
@@ -11,7 +12,7 @@ struct ListeningSessionsView: View {
     var body: some View {
         List {
             Section {
-                DetectionRangePicker(range: $range)
+                if historyInterval == nil { DetectionRangePicker(range: $range) }
                 LabeledContent("Listening time") {
                     Text(Duration.seconds(sessions.reduce(0) { $0 + $1.knownDuration }),
                          format: .units(allowed: [.hours, .minutes, .seconds], width: .abbreviated))
@@ -36,7 +37,12 @@ struct ListeningSessionsView: View {
         .navigationTitle("Sessions")
         .task(id: range) {
             do {
-                sessions = try await store.sessions(in: range.interval(endingAt: .now))
+                let snapshots = try await store.sessions(in: historyInterval ?? range.interval(endingAt: .now))
+                if let historyInterval {
+                    sessions = snapshots.filter { $0.startedAt >= historyInterval.start || $0.knownEnd > historyInterval.start }
+                } else {
+                    sessions = snapshots
+                }
                 errorMessage = nil
             } catch {
                 errorMessage = error.localizedDescription

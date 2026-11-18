@@ -1,6 +1,10 @@
 import SwiftUI
 import RespiratoryKit
 
+enum ListenDestination: Hashable {
+    case sessions, tuning, review, classifierLabels
+}
+
 struct ListenView: View {
     @State private var model: ListenViewModel
     @State private var wantsListening = false
@@ -29,6 +33,13 @@ struct ListenView: View {
                     .controlSize(.large)
                     .disabled(model.phase != .idle)
             }
+            if model.phase == .idle {
+                NavigationLink(value: ListenDestination.sessions) {
+                    Label("Past listening sessions", systemImage: "clock")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
             if model.phase == .starting { ProgressView("Starting microphone…") }
             if let message = model.errorMessage {
                 Text(message).foregroundStyle(.red).multilineTextAlignment(.center)
@@ -44,21 +55,32 @@ struct ListenView: View {
         }
         .padding()
         .navigationTitle("Listen")
+        .navigationDestination(for: ListenDestination.self) { destination in
+            switch destination {
+            case .sessions: ListeningSessionsView(store: store)
+            case .tuning: DetectionTuningView(store: store)
+            case .review: DetectionReviewView(store: store)
+            case .classifierLabels: ClassifierProbeView()
+            }
+        }
         .task(id: wantsListening) {
-            guard wantsListening else { return }
+            guard wantsListening, selectedTab == .listen else { return }
             await AppServices.shared.run(.listening) { await model.listen() }
             wantsListening = false
         }
         .onAppear {
             #if DEBUG
             // Simulator verification without UI automation: `-autoStartListening YES`.
-            if UserDefaults.standard.bool(forKey: "autoStartListening"), model.phase == .idle { wantsListening = true }
+            if UserDefaults.standard.bool(forKey: "autoStartListening"), selectedTab == .listen, model.phase == .idle {
+                wantsListening = true
+            }
             #endif
         }
-        // Tabs keep this screen alive; leaving the tab must still turn the microphone off. (Opening a
-        // detection tool from this tab's menu doesn't: that's still this screen's own stack.)
+        // The tab can keep this view alive after selection changes.
         .onChange(of: selectedTab) { _, tab in
-            if tab != .more { stop(.navigatedAway) }
+            guard tab != .listen else { return }
+            disclosureStartsListening = nil
+            stop(.navigatedAway)
         }
         .onDisappear { stop(.navigatedAway) }
         .onChange(of: scenePhase) { _, phase in
@@ -72,15 +94,15 @@ struct ListenView: View {
                 acknowledgedVersion = MicrophoneDisclosure.version
                 UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: MicrophoneDisclosure.acknowledgedAtKey)
                 disclosureStartsListening = nil
-                if startsListening { wantsListening = true }
+                if startsListening && selectedTab == .listen { wantsListening = true }
             }
         }
         .toolbar {
             Menu {
-                NavigationLink("Tuning") { DetectionTuningView(store: store) }
-                NavigationLink("Review") { DetectionReviewView(store: store) }
-                NavigationLink("Sessions") { ListeningSessionsView(store: store) }
-                NavigationLink("Classifier labels") { ClassifierProbeView() }
+                NavigationLink("Tuning", value: ListenDestination.tuning)
+                NavigationLink("Review", value: ListenDestination.review)
+                NavigationLink("Sessions", value: ListenDestination.sessions)
+                NavigationLink("Classifier labels", value: ListenDestination.classifierLabels)
                 Button("About listening") { disclosureStartsListening = false }
             } label: {
                 Label("Detection tools", systemImage: "slider.horizontal.3")
