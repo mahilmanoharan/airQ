@@ -1,8 +1,7 @@
 import SwiftUI
 import AirQualityKit
 
-/// Tree, grass and weed on Google's 0–5 Universal Pollen Index. A missing type shows "—",
-/// never zero: the forecast had no value for it.
+/// Tree, grass and weed on Google's 0–5 Universal Pollen Index.
 struct PollenBreakdownView: View {
     let pollen: PollenReading
     /// When the forecast was requested: its day 0. Later outlook days count on from here.
@@ -10,125 +9,132 @@ struct PollenBreakdownView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Pollen by type").font(.headline)
-            if let first = pollen.firstDayKey, first != DayKey.local(.now), let date = DayKey.date(first) {
-                // Google dates its forecast in UTC, so an evening request can already return tomorrow.
-                Text("Google's forecast for \(date.formatted(Date.FormatStyle(timeZone: .gmt).weekday(.wide))).")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Pollen by type").font(.headline).accessibilityAddTraits(.isHeader)
+                PollenForecastRow(title: "Tree pollen", index: pollen.treeIndex)
+                    .accessibilityIdentifier("pollenType-tree")
+                PollenForecastRow(title: "Grass pollen", index: pollen.grassIndex)
+                    .accessibilityIdentifier("pollenType-grass")
+                PollenForecastRow(title: "Weed pollen", index: pollen.weedIndex)
+                    .accessibilityIdentifier("pollenType-weed")
             }
-            HStack(spacing: 8) {
-                PollenTypeTile(name: "Tree", systemImage: "tree", index: pollen.treeIndex)
-                PollenTypeTile(name: "Grass", systemImage: "leaf", index: pollen.grassIndex)
-                PollenTypeTile(name: "Weed", systemImage: "camera.macro", index: pollen.weedIndex)
+            .dashboardCard()
+            if let outlook = pollen.outlook, !outlook.isEmpty {
+                PollenOutlookView(pollen: pollen, outlook: outlook, fetchedAt: fetchedAt)
             }
             if let plants = pollen.plants, !plants.isEmpty {
                 PollenPlantsRow(plants: plants)
             }
-            if let outlook = pollen.outlook, !outlook.isEmpty {
-                PollenOutlookRow(pollen: pollen, outlook: outlook, fetchedAt: fetchedAt)
-            }
-            Text(pollen.plants?.contains { $0.inSeason == false } == true
-                 ? "Google daily forecast, not a measurement. Dashed plants are out of season."
-                 : "Google daily forecast, not a measurement.")
-                .font(.caption2)
+            Text("Google pollen forecast")
+                .font(.footnote)
                 .foregroundStyle(.secondary)
         }
-        .dashboardCard()
     }
 }
 
-private struct PollenTypeTile: View {
-    let name: String
-    let systemImage: String
+private struct PollenForecastRow: View {
+    let title: String
     let index: Int?
+
+    private var category: String { PollenPresentation.category(for: index) }
 
     var body: some View {
         let color = PollenPresentation.color(for: index)
-        VStack(spacing: 6) {
-            Image(systemName: systemImage).foregroundStyle(color)
-            Text(index.map(String.init) ?? "—").font(.title2.weight(.bold)).foregroundStyle(color)
-            Text(name).font(.caption.weight(.medium))
-            Text(PollenPresentation.category(for: index))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Circle().fill(color).frame(width: 9, height: 9)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    name.fixedSize()
+                    Spacer(minLength: 0)
+                    reading.fixedSize()
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    name
+                    reading
+                }
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 12).fill(color.opacity(0.1)))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name) pollen")
-        .accessibilityValue(index.map { "\($0) of 5, \(PollenPresentation.category(for: $0))" } ?? "Unavailable")
+        .accessibilityLabel(title)
+        .accessibilityValue(index.map { "\($0) of 5, \(category)" } ?? category)
+    }
+
+    private var name: some View { Text(title).font(.body.weight(.semibold)) }
+
+    private var reading: some View {
+        Text(index.map { "\(category) · \($0) of 5" } ?? category)
+            .font(.body)
     }
 }
 
-/// Plants with a value, highest first, as wrapping chips. Off-season plants are dimmed, not hidden:
-/// Google can still forecast a value for them.
+/// Plants with a forecast value, highest index first. A dashed outline marks out-of-season plants.
 private struct PollenPlantsRow: View {
     let plants: [PollenPlant]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Plants").font(.subheadline.weight(.semibold))
-            FlowLayout(spacing: 6) {
-                ForEach(plants) { plant in
-                    let color = PollenPresentation.color(for: plant.index)
-                    let offSeason = plant.inSeason == false
-                    Text("\(plant.name) \(plant.index)")
-                        .font(.caption)
-                        .foregroundStyle(offSeason ? .secondary : .primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(color.opacity(offSeason ? 0.06 : 0.15)))
-                        .overlay { if offSeason { Capsule().strokeBorder(.secondary.opacity(0.4), style: StrokeStyle(dash: [2, 2])) } }
-                        .accessibilityLabel(plant.name)
-                        .accessibilityValue("\(plant.index) of 5, \(PollenPresentation.category(for: plant.index))"
-                                            + (offSeason ? ", out of season" : ""))
+        DisclosureGroup("Plant details") {
+            VStack(alignment: .leading, spacing: 8) {
+                FlowLayout(spacing: 6) {
+                    ForEach(plants) { plant in
+                        let color = PollenPresentation.color(for: plant.index)
+                        let offSeason = plant.inSeason == false
+                        Text("\(plant.name) \(plant.index)")
+                            .font(.subheadline)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(color.opacity(offSeason ? 0.06 : 0.15)))
+                            .overlay {
+                                if offSeason {
+                                    Capsule().strokeBorder(.secondary, style: StrokeStyle(dash: [2, 2]))
+                                }
+                            }
+                            .accessibilityLabel(plant.name)
+                            .accessibilityValue("\(plant.index) of 5, \(PollenPresentation.category(for: plant.index))"
+                                                + (offSeason ? ", out of season" : ""))
+                            .accessibilityIdentifier("pollenPlant-\(plant.code)")
+                    }
+                }
+                if plants.contains(where: { $0.inSeason == false }) {
+                    Text("Dashed plants are out of season.").font(.footnote)
                 }
             }
+            .padding(.top, 8)
         }
+        .tint(.primary)
+        .dashboardCard()
     }
 }
 
 /// Each forecast day's highest type index, labelled by Google's own dates when known (else by
 /// counting on from the fetch day).
-private struct PollenOutlookRow: View {
+private struct PollenOutlookView: View {
     let pollen: PollenReading
     let outlook: [PollenOutlookDay]
     let fetchedAt: Date?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Next days").font(.subheadline.weight(.semibold))
-            HStack(spacing: 6) {
-                ForEach(Array(([pollen.overallIndex] + outlook.map(\.overallIndex)).enumerated()), id: \.offset) { offset, index in
-                    let color = PollenPresentation.color(for: index)
-                    VStack(spacing: 2) {
-                        Text(label(offset)).font(.caption2).foregroundStyle(.secondary)
-                        Text(index.map(String.init) ?? "—").font(.subheadline.weight(.bold)).foregroundStyle(color)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(color.opacity(0.1)))
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(label(offset))
-                    .accessibilityValue(index.map { "\($0) of 5, \(PollenPresentation.category(for: $0))" } ?? "No forecast")
-                }
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Forecast by day").font(.headline).accessibilityAddTraits(.isHeader)
+            ForEach(Array(([pollen.overallIndex] + outlook.map(\.overallIndex)).enumerated()), id: \.offset) { offset, index in
+                PollenForecastRow(title: label(offset), index: index)
+                    .accessibilityIdentifier("pollenOutlook-\(offset)")
             }
         }
+        .dashboardCard()
     }
 
     private func label(_ offset: Int) -> String {
-        if let keys = pollen.dayKeys, keys.indices.contains(offset) {
-            return DayKey.label(keys[offset], relativeTo: .now)
+        if let keys = pollen.dayKeys, keys.indices.contains(offset), let day = DayKey.date(keys[offset]) {
+            return day.formatted(Date.FormatStyle(timeZone: .gmt).weekday(.abbreviated).month(.abbreviated).day())
         }
         let calendar = Calendar.current
         guard let base = fetchedAt, let date = calendar.date(byAdding: .day, value: offset, to: base) else {
-            return offset == 0 ? "Today" : "+\(offset)d"
+            return "Forecast day \(offset + 1)"
         }
-        return DayKey.label(DayKey.local(date, in: calendar), relativeTo: .now, calendar: calendar)
+        return date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
     }
 }
 

@@ -436,6 +436,34 @@ final class AirQUITests: XCTestCase {
         XCTAssertEqual(pollen.frame.width, air.frame.width, accuracy: 2)
     }
 
+    func testPollenDetailsKeepForecastsReadableAtTheLargestTextSize() {
+        let app = launch(extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let pollen = app.buttons["todayMetric-pollen"]
+        reveal(pollen, in: app)
+        pollen.tap()
+        XCTAssertTrue(app.navigationBars["Pollen"].waitForExistence(timeout: 5))
+
+        let rows = app.descendants(matching: .any)
+        let tree = rows["pollenType-tree"].firstMatch
+        let grass = rows["pollenType-grass"].firstMatch
+        let weed = rows["pollenType-weed"].firstMatch
+        reveal(tree, in: app)
+        XCTAssertGreaterThanOrEqual(grass.frame.minY, tree.frame.maxY)
+        XCTAssertEqual(tree.value as? String, "2 of 5, Low")
+        XCTAssertEqual(weed.value as? String, "Unavailable")
+
+        let next = rows["pollenOutlook-1"].firstMatch
+        reveal(next, in: app)
+        XCTAssertEqual(next.value as? String, "3 of 5, Moderate")
+        let plant = rows["pollenPlant-OAK"].firstMatch
+        XCTAssertFalse(plant.exists)
+        let plants = app.buttons["Plant details"]
+        reveal(plants, in: app)
+        plants.tap()
+        reveal(plant, in: app)
+        XCTAssertEqual(plant.label, "Oak")
+    }
+
     func testListenTabOpensPastSessionsWithoutADuplicateTodayCard() {
         let app = launch()
         XCTAssertTrue(app.buttons["todayMetric-airQuality"].waitForExistence(timeout: 10))

@@ -44,6 +44,8 @@ Start at [airQApp.swift](../airQ/App/airQApp.swift). For air readings, continue 
 
 Tap the check-in card to open the first question if the app has loaded today's records and there is no saved check-in. If a check-in exists or the app cannot start a new one, the card opens the check-in overview. The flow shows one question per card. Use **Next** or **Skip** at the bottom to continue. **Save** stays in the same area while you review the answers.
 
+Pollen details show the three pollen types and the forecast dates in separate rows. A missing value shows **Unavailable**. Expand **Plant details** to see the plant forecasts.
+
 `TabDestination` maps routes to the correct tab and screen. Keep existing route IDs so links continue to work. A Listen link opens the root of the Listen tab. The Siri action that saves a no-symptoms check-in requires device authentication.
 
 `SpotlightNavigation` submits four public screen descriptions to the iPhone search index. A Spotlight activity opens the matching screen through the same route. Only the known shortcut IDs can open a screen. The index contains no personal observations or report data.
