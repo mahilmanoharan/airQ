@@ -19,15 +19,12 @@ struct ListenStatusCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Image(systemName: isListening ? "waveform" : "mic")
-                .font(.title.weight(.medium))
+                .font(.title3.weight(.medium))
                 .foregroundStyle(AirQStyle.accent)
-                .padding(12)
-                .background(.background.opacity(0.65), in: Circle())
                 .symbolEffect(.pulse, isActive: isListening && !reduceMotion)
                 .accessibilityHidden(true)
             Text(title)
-                .font(.title.bold())
-                .fontDesign(.rounded)
+                .font(.title2.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
             status
             if let message = model.errorMessage {
@@ -35,9 +32,7 @@ struct ListenStatusCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background { AirQStyle.tintedSurface(isListening ? .teal : AirQStyle.accent) }
+        .airQCard()
     }
 
     @ViewBuilder private var status: some View {

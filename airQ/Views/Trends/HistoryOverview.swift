@@ -31,7 +31,7 @@ struct HistoryJournal: View {
                       systemImage: "checkmark.circle")
                     .font(.subheadline).foregroundStyle(.secondary)
                 Text(TrendsLabels.checkInSummary(latest))
-                    .font(.title3.weight(.semibold)).fontDesign(.rounded)
+                    .font(.title3.weight(.semibold))
                     .accessibilityIdentifier("historyCheckInSummary")
             }
             .airQCard()
@@ -42,12 +42,8 @@ struct HistoryJournal: View {
         if data.hasHistoryContent {
             Button { open(.comparison) } label: {
                 Label(HistoryDetail.comparison.title, systemImage: "chart.xyaxis.line")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 40)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .foregroundStyle(AirQStyle.onAccent)
+            .buttonStyle(AirQPrimaryButtonStyle())
 
             VStack(spacing: 0) {
                 row(.day, title: "View a day", symbol: "calendar")
@@ -131,11 +127,10 @@ private struct HistoryEmptyState: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(hasHistory ? "No check-ins in this period" : "Your history starts with a day")
-                .font(.title3.weight(.semibold)).fontDesign(.rounded)
+                .font(.title3.weight(.semibold))
             Text("Add a check-in to remember how you felt.").foregroundStyle(.secondary)
             Button("Add a check-in", systemImage: "plus") { openRoute(.checkIn) }
-                .buttonStyle(.borderedProminent)
-                .foregroundStyle(AirQStyle.onAccent).controlSize(.large)
+                .buttonStyle(AirQPrimaryButtonStyle())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .airQCard()

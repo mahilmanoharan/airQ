@@ -33,7 +33,7 @@ struct CheckInFlowView: View {
                 bottomBar
             }
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .navigationTitle(target == .today ? "Today" : "Yesterday")
         .navigationBarTitleDisplayMode(.inline)
         // One job on screen: no tab bar, and one clear way out ("Back" below is for the previous card).
@@ -150,7 +150,7 @@ struct CheckInFlowView: View {
 
     private var bottomBar: some View {
         let layout = typeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 4))
+            ? AnyLayout(VStackLayout(alignment: .trailing, spacing: 4))
             : AnyLayout(HStackLayout(spacing: 12))
         return layout {
             if let previous = CheckInFlow.step(before: step, for: model.draft) {
@@ -160,16 +160,14 @@ struct CheckInFlowView: View {
                 }
                 .disabled(model.isSaving)
             }
+            if !typeSize.isAccessibilitySize { Spacer(minLength: 0) }
             Button(action: primaryAction) {
                 Text(actionTitle)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 44)
             }
-            .buttonStyle(.borderedProminent)
-            .foregroundStyle(AirQStyle.onAccent)
-            .controlSize(.large)
+            .buttonStyle(AirQPrimaryButtonStyle())
             .disabled(step == .review && (model.isSaving || !hasAnswers))
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
         .airQActionBar()
     }
 
@@ -203,13 +201,12 @@ private struct QuestionCard<Answers: View>: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(question)
                     .font(.title2.bold())
-                    .fontDesign(.rounded)
                     .accessibilityAddTraits(.isHeader)
                 if let hint { Text(hint).font(.subheadline) }
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background { AirQStyle.tintedSurface(AirQStyle.accent) }
+            .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
             answers()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -244,7 +241,7 @@ private struct CheckInReview: View {
         let draft = model.draft
         VStack(alignment: .leading, spacing: 14) {
             Text(hasAnswers ? "Ready to save" : "Review your check-in")
-                .font(.title2.bold()).fontDesign(.rounded)
+                .font(.title2.bold())
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 8) {
                 LabeledContent("Symptoms", value: draft.daytimeSymptoms == nil && draft.nightWaking == nil
@@ -283,7 +280,7 @@ private struct CheckInDoneView: View {
                     .symbolEffect(.bounce, value: appeared)
                     .accessibilityHidden(true)
                 Text(target == .today ? "Today is logged" : "Yesterday is logged")
-                    .font(.title2.bold()).fontDesign(.rounded)
+                    .font(.title2.bold())
                     .accessibilityAddTraits(.isHeader)
                 Text("It's in History now, next to the air that day.")
                 Button("See it in History", systemImage: "chart.xyaxis.line") {
@@ -296,15 +293,15 @@ private struct CheckInDoneView: View {
             .multilineTextAlignment(.center)
             .padding(20)
             .frame(maxWidth: .infinity)
-            .background { AirQStyle.tintedSurface(AirQStyle.accent) }
+            .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
             .padding()
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            Button(action: done) { Text("Done").frame(maxWidth: .infinity, minHeight: 52) }
-                .buttonStyle(.borderedProminent)
-                .foregroundStyle(AirQStyle.onAccent)
+            Button("Done", action: done)
+                .buttonStyle(AirQPrimaryButtonStyle())
+                .frame(maxWidth: .infinity, alignment: .trailing)
                 .airQActionBar()
         }
         .onAppear { if !reduceMotion { appeared = true } }

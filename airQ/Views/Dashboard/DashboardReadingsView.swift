@@ -28,8 +28,7 @@ struct DashboardEssentialsView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(snapshot.locationName)
-                    .font(.largeTitle.bold())
-                    .fontDesign(.rounded)
+                    .font(.title.weight(.semibold))
                     .accessibilityAddTraits(.isHeader)
                 Text(savedReading
                      ? "Last saved \(snapshot.lastUpdated.formatted(date: .abbreviated, time: .shortened))"

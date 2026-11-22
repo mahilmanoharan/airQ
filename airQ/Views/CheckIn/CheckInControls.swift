@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// A large answer for a check-in card: full width, at least 56 pt tall, and a selected answer reads without
-/// colour (filled, with a check mark), since colour alone can't carry meaning.
+/// A check-in row with a full-width tap target and a check mark for the selected answer.
 struct AnswerButton: View {
     let title: String
     var detail: String? = nil
@@ -16,13 +15,15 @@ struct AnswerButton: View {
                     if let detail { Text(detail).font(.subheadline).opacity(0.8) }
                 }
                 Spacer(minLength: 0)
-                if isSelected { Image(systemName: "checkmark.circle.fill").font(.title3).accessibilityHidden(true) }
+                if isSelected {
+                    Image(systemName: "checkmark").foregroundStyle(AirQStyle.accent).accessibilityHidden(true)
+                }
             }
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
-            .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color(.secondarySystemGroupedBackground)),
-                        in: RoundedRectangle(cornerRadius: 14))
-            .foregroundStyle(isSelected ? AnyShapeStyle(AirQStyle.onAccent) : AnyShapeStyle(.primary))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: 8))
+            .foregroundStyle(.primary)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -40,12 +41,11 @@ struct SymptomChip: View {
                 if isSelected { Image(systemName: "checkmark").font(.caption.weight(.bold)).accessibilityHidden(true) }
                 Text(title).font(.body)
             }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .frame(minHeight: 48)
-                .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color(.secondarySystemGroupedBackground)),
-                            in: Capsule())
-                .foregroundStyle(isSelected ? AnyShapeStyle(AirQStyle.onAccent) : AnyShapeStyle(.primary))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .frame(minHeight: 44)
+                .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: 8))
+                .foregroundStyle(isSelected ? AirQStyle.accent : Color.primary)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])

@@ -36,11 +36,13 @@ Start at [airQApp.swift](../airQ/App/airQApp.swift). For air readings, continue 
 
 | Tab | Function |
 | --- | --- |
-| Today | Shows the place and reading time. The tinted cards show the air and pollen levels in words and numbers. Tap a card to see the reading first. Open its scale with the button below it. You can share the air reading from its detail screen. At larger text sizes, the cards stack. The check-in comes before tomorrow's forecast and is available if the air data is missing. Tap **Tomorrow’s forecast** for the date, station forecast, and pollen by type. The screen uses the saved forecast for that date. |
+| Today | Shows the place and reading time. The cards show the air and pollen levels in words and numbers. Tap a card to see what the reading means and open its scale. You can share the air reading from its detail screen. At larger text sizes, the cards stack. The check-in comes before tomorrow's forecast and is available if the air data is missing. Tap **Tomorrow’s forecast** for the date, station forecast, and pollen by type. The screen uses the saved forecast for that date. |
 | Listen | Keeps **Start listening**, **Stop listening**, and the active microphone indicator above the tab bar. **Past listening sessions** keeps the date filter available when the list is empty. Listening tools are separate from capture controls. |
 | History | Shows the latest check-in and gives the comparison charts the primary action. Tap or drag a chart to highlight the same day across symptoms, air quality, and pollen. The pinned date bar steps between days or opens the day inspector. Use **Jump to date** in the inspector for the calendar. |
 | Report | Shows the selected period and a text summary. **Share report** stays above the tab bar when the PDF is ready. Tap **Preview report** to read it first. Expand **Advanced export** for raw records. |
 | More | Shows Life events and Air quality alerts. In Life events, **Add event** stays below the list. Expand **Data & privacy** for stored data, app information, and erasure. |
+
+The shared style uses neutral system surfaces, a blue accent, and primary buttons that size to their labels with a minimum 44-point tap target. The air and pollen levels still use their reading colors.
 
 The welcome screen on Today explains location access before **Get started**. At accessibility text sizes, each icon sits above its description. **Get started** stays visible as the introduction scrolls.
 

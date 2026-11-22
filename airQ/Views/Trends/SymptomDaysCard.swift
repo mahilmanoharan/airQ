@@ -16,7 +16,7 @@ struct SymptomDaysCard: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Button("Go to Check-in", systemImage: "checklist") { openRoute(.checkIn) }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(AirQPrimaryButtonStyle())
             } else {
                 if !table.air.isEmpty {
                     Text("Air quality").font(.subheadline.weight(.semibold))

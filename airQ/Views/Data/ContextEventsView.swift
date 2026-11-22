@@ -46,7 +46,8 @@ struct ContextEventsView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            addEvent.airQActionBar()
+            addEvent.frame(maxWidth: .infinity, alignment: .trailing)
+                .airQActionBar()
         }
         .navigationTitle("Life events")
         .sheet(item: $editing) { target in
@@ -65,13 +66,8 @@ struct ContextEventsView: View {
     private var addEvent: some View {
         Button { editing = .add } label: {
             Label("Add event", systemImage: "plus")
-                .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: 44)
         }
-        .buttonStyle(.borderedProminent)
-        .foregroundStyle(AirQStyle.onAccent)
-        .controlSize(.large)
-        .tint(AirQStyle.accent)
+        .buttonStyle(AirQPrimaryButtonStyle())
     }
 }
 

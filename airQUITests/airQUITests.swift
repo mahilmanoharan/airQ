@@ -554,6 +554,9 @@ final class AirQUITests: XCTestCase {
         let start = app.buttons["Start listening"]
         let sessions = app.buttons["Past listening sessions"]
         XCTAssertTrue(start.isEnabled)
+        XCTAssertGreaterThanOrEqual(start.frame.height, 44)
+        XCTAssertLessThan(start.frame.height, 54)
+        XCTAssertLessThan(start.frame.width, app.frame.width * 0.65)
         XCTAssertGreaterThan(start.frame.minY, sessions.frame.maxY)
         sessions.tap()
         XCTAssertTrue(app.navigationBars["Sessions"].waitForExistence(timeout: 5))
@@ -814,7 +817,7 @@ final class AirQUITests: XCTestCase {
         let add = app.buttons["Add event"].firstMatch
         XCTAssertTrue(app.staticTexts["No life events yet"].waitForExistence(timeout: 5))
         XCTAssertTrue(add.isHittable)
-        XCTAssertGreaterThan(add.frame.width, app.frame.width * 0.8)
+        XCTAssertGreaterThanOrEqual(add.frame.height, 44)
         let initialFrame = add.frame
 
         add.tap()

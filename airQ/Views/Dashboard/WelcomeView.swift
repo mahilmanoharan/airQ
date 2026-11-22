@@ -49,18 +49,11 @@ struct WelcomeView: View {
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity)
         }
-        .safeAreaInset(edge: .bottom) {
-            Button(action: onContinue) {
-                Text("Get started")
-                    .font(.headline)
-                    .frame(maxWidth: 560, minHeight: 48)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .foregroundStyle(AirQStyle.onAccent)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 8)
-            .background(.bar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Button("Get started", action: onContinue)
+                .buttonStyle(AirQPrimaryButtonStyle())
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .airQActionBar()
         }
         .background(Color(.systemBackground))
     }

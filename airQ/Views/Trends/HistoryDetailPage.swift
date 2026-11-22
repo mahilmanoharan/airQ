@@ -51,7 +51,7 @@ struct HistoryDetailPage: View {
                 #endif
             }
             .background {
-                if detail == .comparison { AirQStyle.atmosphere } else { AirQStyle.page }
+                if detail == .comparison { AirQStyle.background } else { AirQStyle.page }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) { selectedDayInset }
             .navigationDestination(isPresented: $showingDayDetails) {

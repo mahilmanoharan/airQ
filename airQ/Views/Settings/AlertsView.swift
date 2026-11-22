@@ -42,7 +42,7 @@ struct AlertsView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .navigationTitle("Air quality alerts")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: refreshEnabled) { BackgroundRefresh.schedule() }
@@ -87,7 +87,7 @@ struct AlertsView: View {
                 .foregroundStyle(AirQStyle.accent)
                 .accessibilityHidden(true)
             Text(title)
-                .font(.title2.bold()).fontDesign(.rounded)
+                .font(.title2.bold())
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Text(detail)
@@ -101,7 +101,7 @@ struct AlertsView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background { AirQStyle.tintedSurface(AirQStyle.accent) }
+        .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
     }
 }
 

@@ -39,7 +39,7 @@ struct ReportOverview: View {
         VStack(alignment: .leading, spacing: 13) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Clinician overview")
-                    .font(.title2.weight(.semibold)).fontDesign(.rounded)
+                    .font(.title2.weight(.semibold))
                     .accessibilityAddTraits(.isHeader)
                 Text(reportDateRange(summary.firstDayKey, summary.lastDayKey))
                     .font(.subheadline).foregroundStyle(.secondary)

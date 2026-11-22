@@ -38,7 +38,7 @@ struct TrendsView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $detail) { destination in

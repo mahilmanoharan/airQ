@@ -63,7 +63,7 @@ struct DashboardView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .navigationTitle("Today")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $openedMetric) { metric in

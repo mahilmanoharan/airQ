@@ -35,9 +35,13 @@ struct ReportView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if let pdf, currentReport != nil { shareReport(pdf).airQActionBar() }
+            if let pdf, currentReport != nil {
+                shareReport(pdf)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .airQActionBar()
+            }
         }
         .navigationTitle("Report")
         .navigationBarTitleDisplayMode(.inline)
@@ -64,7 +68,7 @@ struct ReportView: View {
     private var appointmentReport: some View {
         VStack(alignment: .leading, spacing: 16) {
             Label("Report for your doctor", systemImage: "doc.text")
-                .font(.title2.weight(.semibold)).fontDesign(.rounded)
+                .font(.title2.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
             HistoryPeriodPicker(title: "Report period")
                 .accessibilityIdentifier("reportPeriod")
@@ -74,11 +78,10 @@ struct ReportView: View {
                     showsPreview = true
                 } label: {
                     Label("Preview report", systemImage: "doc.text.magnifyingglass")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, minHeight: 32)
+                        .frame(minHeight: 30)
                 }
                 .buttonStyle(.bordered)
-                .controlSize(.large)
+                .buttonBorderShape(.roundedRectangle(radius: 8))
                 .accessibilityIdentifier("previewReport")
                 if let pdfError {
                     Text(pdfError)
@@ -111,13 +114,8 @@ struct ReportView: View {
         ShareLink(item: pdf, subject: Text("airQ Respiratory Report"),
                   preview: SharePreview("airQ Respiratory Report")) {
             Label("Share report", systemImage: "square.and.arrow.up")
-                .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: 40)
         }
-        .buttonStyle(.borderedProminent)
-        .foregroundStyle(AirQStyle.onAccent)
-        .controlSize(.large)
-        .tint(AirQStyle.accent)
+        .buttonStyle(AirQPrimaryButtonStyle())
         .accessibilityIdentifier("shareReportSummary")
     }
 

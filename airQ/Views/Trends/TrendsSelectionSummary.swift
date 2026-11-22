@@ -50,7 +50,7 @@ struct TrendsSelectionSummary: View {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(DayKeys.display(day.dayKey, style: .dateTime.weekday(.wide).month(.wide).day()))
-                        .font(.title.bold()).fontDesign(.rounded)
+                        .font(.title.bold())
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("historySelectedDay")
                     ViewThatFits(in: .horizontal) {
@@ -60,14 +60,14 @@ struct TrendsSelectionSummary: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background { AirQStyle.tintedSurface(AirQStyle.accent) }
+                .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
                 HistoryDayValues(data: data, day: day, stacked: typeSize.isAccessibilitySize, showsCards: true)
             }
             .padding()
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             let layout = typeSize.isAccessibilitySize
                 ? AnyLayout(VStackLayout(spacing: 6))
@@ -79,7 +79,7 @@ struct TrendsSelectionSummary: View {
                     .disabled(index == data.days.count - 1)
             }
             .buttonStyle(.bordered)
-            .controlSize(.large)
+            .buttonBorderShape(.roundedRectangle(radius: 8))
             .airQActionBar()
         }
     }
@@ -113,7 +113,7 @@ struct TrendsSelectionSummary: View {
                            action: @escaping () -> Void) -> some View {
         Button(action: action) {
             if labeled {
-                Label(label, systemImage: symbol).frame(maxWidth: .infinity, minHeight: 38)
+                Label(label, systemImage: symbol).frame(maxWidth: .infinity, minHeight: 32)
             } else {
                 Image(systemName: symbol).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
             }

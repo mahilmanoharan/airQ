@@ -4,6 +4,7 @@ Local feature commits and publishing `cook` to GitHub are authorized by the user
 
 ## Visual hierarchy and controls
 
+- The app uses neutral surfaces, system type, and a muted blue accent. Primary buttons size to their labels with a minimum 44-point tap target. Today shows shorter reading cards with details one tap away. Fourteen targeted simulator tests passed across two runs, including both accessibility audits. Visually checked Today, Listen, History, Report, and Life events at the default text size on iPhone 17 Pro. The simulator is open on Today.
 - Welcome puts icons above their descriptions at accessibility text sizes and keeps **Get started** visible while the introduction scrolls. The location explanation names the next action and the readings it enables. Three simulator tests passed, covering the standard and largest text sizes and the main-screen accessibility audit.
 - **Listen → Past listening sessions** keeps the range picker in the list. The archive shows when it is loading and explains when the selected range has no sessions. Three simulator tests passed, including changing the range on an empty archive at the largest text size.
 - **More → Life events** keeps **Add event** above the tab bar, including after the first save. The empty screen describes what people can record and points them to History for comparison. Four iPhone 17 Pro / iOS 26.4 UI tests passed, covering large text, saving, History integration, and the secondary-screen accessibility audit.
@@ -12,7 +13,7 @@ Local feature commits and publishing `cook` to GitHub are authorized by the user
 - The verified usability and Apple framework work through the Air quality detail pass was pushed to `cook` as `5441e37`.
 - Air quality alerts starts with a setup status. The screen keeps both alert switches available and puts quiet hours, daily limits, and delivery timing under **How alerts work**.
 - Three targeted UI tests passed for alerts and More, including the main accessibility audit. Both Background updates states were visually checked on iPhone 17 Pro / iOS 26.4. Scheduled delivery and real notification permission remain physical-device checks.
-- Today uses reading-level tints and a filled daily check-in action. Save changes the card to a quieter “View your check-in” treatment. Air quality sharing moved to the Air quality detail toolbar.
+- Today uses level markers and a neutral daily check-in row. Save changes the title to “View your check-in.” Air quality sharing is on the Air quality detail toolbar.
 - Air quality and Pollen details start with the place, the reading and its meaning. Air quality marks older readings as **Last saved**. **See AQI scale** and **See pollen scale** open the reference without scrolling through charts. Missing pollen leaves the scale without a selected level.
 - Pollen type and outlook rows show the level in words and numbers, with wrapping text and visible missing-data labels. **Forecast by day** uses the provider's dates for dated forecasts. **Plant details** opens on demand.
 - Five targeted pollen and Today tests passed, including forecasts and the plant disclosure at the largest text size.
@@ -35,9 +36,9 @@ Local feature commits and publishing `cook` to GitHub are authorized by the user
 
 ## Today, History and printable Report redesign
 
-- Today shows the place, reading time, and plain-language air and pollen levels before the index numbers. The cards sit side by side without horizontal scrolling and stack from the system's XX Large text size. Each card says “See details.” The check-in card comes before tomorrow’s forecast.
+- Today shows the place, reading time, and plain-language air and pollen levels before the index numbers. The cards sit side by side without horizontal scrolling and stack from the system's XX Large text size. Each reading card opens its details. The check-in card comes before tomorrow’s forecast.
 - A new check-in zooms into the question flow after the model confirms there is no saved entry. Existing entries and unavailable record state route through the check-in hub. The first question says “Answer as much as you like.”
-- The welcome action stays at the bottom while the introduction scrolls. Check-in symptom buttons and Back have larger tap areas. Listen provides full-width Start and Stop controls. History and Report share an adaptive period picker that uses a menu from XX Large text size.
+- The welcome action stays at the bottom while the introduction scrolls. Check-in symptom buttons and Back have larger tap areas. Listen keeps Start and Stop above the tab bar. History and Report share an adaptive period picker that uses a menu from XX Large text size.
 - **Listen** is the second tab and the in-app entry point for capture. `airq://listen` opens the root of its navigation stack, including when a listening tool was open. **Start listening** begins capture. Leaving the tab ends capture, and erasing the record clears the listening stack and live results.
 - History leads with the latest check-in. **View a day** opens a calendar and day-by-day details. **Compare with air & pollen** opens the aligned charts, and **Listening history** appears when there is listening data or a session in the selected period, including an interrupted session with no sound window.
 - Report shows the period, a plain-language summary, and **Preview report** and **Share report**. The preview contains clinical measures, coverage, weekly rows, and the plain-text summary. The one-page US Letter PDF is generated in memory and omits free-text life-event notes. Raw export remains under Advanced.

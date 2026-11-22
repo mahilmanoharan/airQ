@@ -36,15 +36,14 @@ struct HistoryComparisonDock: View {
                     }
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.borderedProminent)
-                .foregroundStyle(AirQStyle.onAccent)
+                .buttonStyle(AirQPrimaryButtonStyle())
                 .accessibilityLabel("View day details")
                 .accessibilityValue(DayKeys.display(day.dayKey, style: .dateTime.weekday(.wide).month(.wide).day()))
                 .accessibilityIdentifier("comparisonOpenDay")
                 dayButton("Next day", symbol: "chevron.forward", index: index + 1)
             }
+            .frame(maxWidth: .infinity)
             .airQActionBar()
             .sensoryFeedback(.selection, trigger: day.dayKey)
         }

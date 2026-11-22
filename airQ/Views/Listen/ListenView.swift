@@ -33,7 +33,7 @@ struct ListenView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 6) {
                 if model.phase == .listening {
@@ -41,6 +41,7 @@ struct ListenView: View {
                         .font(.subheadline.weight(.semibold))
                 }
                 captureAction
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .airQActionBar()
         }
@@ -96,12 +97,8 @@ struct ListenView: View {
             if canStop { stop(.userStopped) } else { start() }
         } label: {
             Label(canStop ? "Stop listening" : "Start listening", systemImage: canStop ? "stop.fill" : "mic.fill")
-                .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: 44)
         }
-        .buttonStyle(.borderedProminent)
-        .foregroundStyle(AirQStyle.onAccent)
-        .controlSize(.large)
+        .buttonStyle(AirQPrimaryButtonStyle())
         .disabled(model.phase == .starting || model.phase == .stopping)
     }
 

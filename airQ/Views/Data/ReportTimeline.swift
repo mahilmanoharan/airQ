@@ -7,7 +7,7 @@ struct ReportTimeline: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Weekly timeline")
-                .font(.title2.weight(.semibold)).fontDesign(.rounded)
+                .font(.title2.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
             if report.summary.checkInDays == 0 && report.summary.air.reported == 0 && report.summary.pollenDays == 0 {
                 Text("No check-in answers, covered air days or pollen forecasts in this period.")

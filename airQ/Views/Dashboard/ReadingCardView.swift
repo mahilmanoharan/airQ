@@ -70,38 +70,40 @@ struct ReadingCardView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: metric == .airQuality ? "wind" : "leaf.fill")
-                .font(.subheadline.weight(.semibold))
-                .labelStyle(.titleAndIcon)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(title).font(.subheadline.weight(.semibold))
+                if showsDetailsLink {
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.forward")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
+            }
             if let forecastDay {
                 Text(forecastDay).font(.caption).foregroundStyle(.secondary)
             }
             Label {
-                Text(category).font(.title3.bold()).fontDesign(.rounded)
+                Text(category).font(.title3.weight(.semibold))
             } icon: {
                 Circle().fill(levelColor).frame(width: 9, height: 9).accessibilityHidden(true)
             }
-            if let meaning {
+            if !showsDetailsLink, let meaning {
                 Text(meaning)
                     .font(.body)
                     .foregroundStyle(.secondary)
             }
             if let value {
-                Text(value).font(.subheadline).monospacedDigit()
+                Text(value).font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
                     .contentTransition(.numericText())
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: value)
-            }
-            if showsDetailsLink {
-                Text("See details")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AirQStyle.accent)
             }
         }
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(14)
-        .background { AirQStyle.tintedSurface(levelColor) }
-        .contentShape(RoundedRectangle(cornerRadius: 24))
+        .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
+        .contentShape(RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
     }
 }

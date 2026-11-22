@@ -32,13 +32,11 @@ struct MicrophoneDisclosureSheet: View {
             }
             .navigationTitle("About listening")
             .navigationBarTitleDisplayMode(.inline)
-            .safeAreaInset(edge: .bottom) {
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 Button(acknowledgeTitle, action: acknowledge)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(.bar)
+                    .buttonStyle(AirQPrimaryButtonStyle())
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .airQActionBar()
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Not now") { dismiss() } }

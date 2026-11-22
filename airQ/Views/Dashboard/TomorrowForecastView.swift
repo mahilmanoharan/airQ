@@ -10,7 +10,7 @@ struct TomorrowForecastView: View {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(snapshot.locationName)
-                        .font(.title2.bold()).fontDesign(.rounded)
+                        .font(.title2.bold())
                         .accessibilityAddTraits(.isHeader)
                     Text(dateLabel)
                         .font(.body)
@@ -23,7 +23,7 @@ struct TomorrowForecastView: View {
             .frame(maxWidth: 720, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .navigationTitle("Tomorrow’s forecast")
         .navigationBarTitleDisplayMode(.inline)
     }

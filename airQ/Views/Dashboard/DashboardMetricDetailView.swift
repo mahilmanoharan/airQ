@@ -44,7 +44,7 @@ struct DashboardMetricDetailView: View {
             }
             #endif
         }
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .navigationTitle(metric.title)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showsScale) {
@@ -55,7 +55,7 @@ struct DashboardMetricDetailView: View {
                         .frame(maxWidth: 720)
                         .frame(maxWidth: .infinity)
                 }
-                .background { AirQStyle.atmosphere }
+                .background { AirQStyle.background }
                 .navigationTitle(scaleTitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -77,17 +77,16 @@ struct DashboardMetricDetailView: View {
     private var readingSummary: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(snapshot.locationName)
-                .font(.title2.bold()).fontDesign(.rounded)
+                .font(.title2.bold())
                 .accessibilityAddTraits(.isHeader)
             if let readingTime { Text(readingTime).font(.subheadline) }
             ReadingCardView(metric: metric, snapshot: snapshot, showsDetailsLink: false)
             Button { showsScale = true } label: {
                 Label(metric == .airQuality ? "See AQI scale" : "See pollen scale", systemImage: "list.bullet")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .frame(minHeight: 32)
             }
             .buttonStyle(.bordered)
-            .controlSize(.large)
+            .buttonBorderShape(.roundedRectangle(radius: 8))
         }
     }
 

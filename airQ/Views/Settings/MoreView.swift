@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MoreView: View {
-    @ScaledMetric(relativeTo: .title3) private var iconSize = 36.0
+    @ScaledMetric(relativeTo: .body) private var iconSize = 24.0
 
     private func subtitle(_ route: AppRoute) -> String {
         switch route {
@@ -28,7 +28,7 @@ struct MoreView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background { AirQStyle.atmosphere }
+        .background { AirQStyle.background }
         .navigationTitle("More")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -38,10 +38,9 @@ struct MoreView: View {
         return NavigationLink(value: route) {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: route.systemImage)
-                    .font(.title3)
+                    .font(.body)
                     .foregroundStyle(color)
                     .frame(width: iconSize, height: iconSize)
-                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(route.title).font(.body.weight(.semibold))

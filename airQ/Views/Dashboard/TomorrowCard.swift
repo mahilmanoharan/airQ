@@ -13,14 +13,16 @@ struct TomorrowCard: View {
             let readings = summary(for: day)
             Button { open(day.dayKey) } label: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Label(title, systemImage: "calendar")
-                        .font(.headline)
-                    ForEach(readings, id: \.self) { reading in
-                        Text(reading).font(.subheadline)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(title).font(.headline)
+                        Spacer(minLength: 4)
+                        Image(systemName: "chevron.forward")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
                     }
-                    Label("See forecast details", systemImage: "chevron.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(AirQStyle.accent)
+                    ForEach(readings, id: \.self) { reading in
+                        Text(reading).font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
                 .dashboardCard()
                 .contentShape(Rectangle())

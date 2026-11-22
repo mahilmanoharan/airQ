@@ -37,24 +37,24 @@ struct TodayCheckInCard: View {
     private var cardLabel: some View {
         HStack(spacing: 12) {
             Image(systemName: isLogged ? "checkmark.circle" : "heart.text.clipboard")
-                .font(.title3)
-                .foregroundStyle(isLogged ? AirQStyle.accent : AirQStyle.onAccent)
+                .foregroundStyle(AirQStyle.accent)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(isLogged ? "View your check-in" : "Check in for today")
-                    .font(.headline)
-                    .foregroundStyle(isLogged ? AirQStyle.accent : AirQStyle.onAccent)
+                    .font(.body.weight(.semibold))
                 Text(isLogged ? "Today’s check-in is saved" : "How was your breathing today?")
                     .font(.subheadline)
-                    .foregroundStyle(isLogged ? Color.primary : AirQStyle.onAccent)
+                    .foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
+            Image(systemName: "chevron.forward")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
         }
-        .frame(minHeight: 52)
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        .background(isLogged ? Color(.secondarySystemGroupedBackground) : AirQStyle.accent,
-                    in: RoundedRectangle(cornerRadius: 22))
-        .contentShape(RoundedRectangle(cornerRadius: 22))
+        .background(AirQStyle.surface, in: RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
+        .contentShape(RoundedRectangle(cornerRadius: AirQStyle.cardRadius))
     }
 }
