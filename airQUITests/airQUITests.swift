@@ -569,15 +569,14 @@ final class AirQUITests: XCTestCase {
 
     /// The same audit over the screens reached less often, including the destructive Erase flow. Checked by
     /// eye on the Erase screen: rows the audit calls "Text clipped" are complete two-line labels, system
-    /// section headers are the standard grey, and chart marks and the toolbar "+" are not app-sized controls.
+    /// section headers are the standard grey, and chart marks are not app-sized controls.
     func testAccessibilityAuditOnSecondaryScreens() throws {
         try audit(ignoring: { issue in
             let label = issue.element?.label ?? ""
             let chartMark = issue.auditType == .hitRegion && label.range(of: #"^[A-Z][a-z]{2} \d{1,2}, \d{4}$"#, options: .regularExpression) != nil
             let wrappedRow = issue.auditType == .textClipped  // icon + text rows in Lists; Export and Erase seen unclipped
-            let toolbarPlus = issue.auditType == .hitRegion && label == "Add event"
             let sectionHeader = issue.auditType == .contrast && label == "Erased"
-            return chartMark || wrappedRow || toolbarPlus || sectionHeader
+            return chartMark || wrappedRow || sectionHeader
         }, [("history", "trends", ["-uiTestHistory", "YES"]), ("report", "report", []),
                    ("listen", "listen", []), ("life events", "contextEvents", []),
                    ("export", "export", []), ("erase", "erase", [])])
@@ -594,7 +593,7 @@ final class AirQUITests: XCTestCase {
                 try app.performAccessibilityAudit { issue in
                     // Not actionable here: borderline ("nearly passed") contrast, Dynamic Type notes on merged
                     // elements, unlabeled system chrome, and rows sitting under a translucent bottom bar.
-                    let pinnedActions = ["Start listening", "Stop listening", "Share report"]
+                    let pinnedActions = ["Start listening", "Stop listening", "Share report", "Add event"]
                     let bottomBarZone = (issue.element?.frame.maxY ?? 0) > app.frame.height * 0.85
                         && !pinnedActions.contains(issue.element?.label ?? "")
                     let ignorable = issue.compactDescription.contains("nearly passed") || issue.auditType == .dynamicType
@@ -766,6 +765,28 @@ final class AirQUITests: XCTestCase {
         details.typeText("UI test inhaler")
         app.buttons["Save"].tap()
         XCTAssertTrue(app.staticTexts["UI test inhaler"].waitForExistence(timeout: 5))
+    }
+
+    func testAddLifeEventStaysVisibleAtTheLargestTextSize() {
+        let app = launch(route: "contextEvents", extraArguments: [
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"
+        ])
+        let add = app.buttons["Add event"].firstMatch
+        XCTAssertTrue(app.staticTexts["No life events yet"].waitForExistence(timeout: 5))
+        XCTAssertTrue(add.isHittable)
+        XCTAssertGreaterThan(add.frame.width, app.frame.width * 0.8)
+        let initialFrame = add.frame
+
+        add.tap()
+        let save = app.buttons["Save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        save.tap()
+
+        XCTAssertTrue(app.staticTexts["Illness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(add.isHittable)
+        XCTAssertEqual(add.frame.minY, initialFrame.minY, accuracy: 2)
+        add.tap()
+        XCTAssertTrue(app.navigationBars["New event"].waitForExistence(timeout: 5))
     }
 
     func testExportProducesAShareableArchive() {

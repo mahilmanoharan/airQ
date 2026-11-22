@@ -4,6 +4,7 @@ Local feature commits and publishing `cook` to GitHub are authorized by the user
 
 ## Visual hierarchy and controls
 
+- **More → Life events** keeps **Add event** above the tab bar, including after the first save. The empty screen describes what people can record and points them to History for comparison. Four iPhone 17 Pro / iOS 26.4 UI tests passed, covering large text, saving, History integration, and the secondary-screen accessibility audit.
 - **Today → Tomorrow’s forecast** opens the saved forecast for its displayed date and place. The detail shows the station’s highest forecast pollutant level and pollen by type. Missing forecasts are labeled. Today’s shortcut still appears only when a saved forecast has an air or pollen value for tomorrow.
 - Five targeted UI tests passed on iPhone 17 Pro / iOS 26.4. They cover the Today preview, opening tomorrow and returning at the largest text size, missing pollen, the existing Pollen screen, and the main-screen accessibility audit.
 - The verified usability and Apple framework work through the Air quality detail pass was pushed to `cook` as `5441e37`.

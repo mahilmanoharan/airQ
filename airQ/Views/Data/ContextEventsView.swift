@@ -17,6 +17,15 @@ struct ContextEventsView: View {
             if let message = model.errorMessage, editing == nil {
                 Section { Text(message).foregroundStyle(.red) }
             }
+            if model.events.isEmpty && model.retracted.isEmpty && !model.isLoading {
+                ContentUnavailableView {
+                    Label("No life events yet", systemImage: "calendar.badge.plus")
+                } description: {
+                    Text("Record a medication change, an illness, a trip, or a move. See these events alongside your check-ins in History.")
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
             Section {
                 ForEach(model.events) { event in
                     Button { editing = .revise(event) } label: { ContextEventRowView(event: event) }
@@ -36,21 +45,10 @@ struct ContextEventsView: View {
                 }
             }
         }
-        .overlay {
-            if model.events.isEmpty && model.retracted.isEmpty && !model.isLoading {
-                ContentUnavailableView {
-                    Label("No context events", systemImage: "calendar.badge.plus")
-                } description: {
-                    Text("Log medication changes, illness, travel or a move, so later analysis can account for them.")
-                } actions: {
-                    Button("Add event") { editing = .add }
-                }
-            }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            addEvent.airQActionBar()
         }
         .navigationTitle("Life events")
-        .toolbar {
-            Button { editing = .add } label: { Label("Add event", systemImage: "plus") }
-        }
         .sheet(item: $editing) { target in
             NavigationStack { ContextEventEditor(target: target, model: model) }
         }
@@ -62,6 +60,18 @@ struct ContextEventsView: View {
             Text("It will be hidden here but kept, marked as removed, in exported data.")
         }
         .task { await model.load() }
+    }
+
+    private var addEvent: some View {
+        Button { editing = .add } label: {
+            Label("Add event", systemImage: "plus")
+                .font(.headline)
+                .frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .buttonStyle(.borderedProminent)
+        .foregroundStyle(AirQStyle.onAccent)
+        .controlSize(.large)
+        .tint(AirQStyle.accent)
     }
 }
 
