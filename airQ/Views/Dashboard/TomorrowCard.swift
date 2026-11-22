@@ -5,25 +5,38 @@ import AirQualityKit
 /// nothing when the saved reading carries no forecast for tomorrow (no request is made for it).
 struct TomorrowCard: View {
     let snapshot: AQSnapshot
+    let open: (String) -> Void
 
     var body: some View {
         if let day = TimelineScheduler.tomorrow(for: snapshot) {
-            VStack(alignment: .leading, spacing: 6) {
-                Label("Tomorrow’s forecast", systemImage: "calendar")
-                    .font(.headline)
-                if let aqi = day.aqiPeak {
-                    Text("Air quality up to \(aqi) · \(AirQualityPresentation.category(for: aqi))")
+            let title = "Tomorrow’s forecast"
+            let readings = summary(for: day)
+            Button { open(day.dayKey) } label: {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(title, systemImage: "calendar")
+                        .font(.headline)
+                    ForEach(readings, id: \.self) { reading in
+                        Text(reading).font(.subheadline)
+                    }
+                    Label("See forecast details", systemImage: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AirQStyle.accent)
                 }
-                if let pollen = day.pollenIndex {
-                    Text("Pollen \(pollen) of 5 · \(PollenPresentation.category(for: pollen))")
-                }
+                .dashboardCard()
+                .contentShape(Rectangle())
             }
-            .font(.subheadline)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
-            .accessibilityElement(children: .combine)
+            .buttonStyle(.plain)
+            .accessibilityLabel(([title] + readings).joined(separator: ", "))
+            .accessibilityHint("Opens forecast details")
+            .accessibilityIdentifier("tomorrowForecast")
         }
+    }
+
+    private func summary(for day: OutlookDay) -> [String] {
+        [
+            day.aqiPeak.map { "Air quality up to \($0) · \(AirQualityPresentation.category(for: $0))" },
+            day.pollenIndex.map { "Pollen \($0) of 5 · \(PollenPresentation.category(for: $0))" }
+        ].compactMap { $0 }
     }
 }
 
@@ -31,6 +44,6 @@ struct TomorrowCard: View {
     TomorrowCard(snapshot: AQSnapshot(
         aqi: 42, dominantPollutant: "pm25", pollenIndex: 2, locationName: "San Francisco", lastUpdated: .now,
         forecast: [.init(day: DayKey.local(.now.addingTimeInterval(86_400)),
-                         pollutants: ["pm25": .init(min: 20, average: 40, max: 68)], uvIndex: nil)]))
+                         pollutants: ["pm25": .init(min: 20, average: 40, max: 68)], uvIndex: nil)])) { _ in }
     .padding()
 }

@@ -36,7 +36,7 @@ Start at [airQApp.swift](../airQ/App/airQApp.swift). For air readings, continue 
 
 | Tab | Function |
 | --- | --- |
-| Today | Shows the place and reading time. The tinted cards show the air and pollen levels in words and numbers. Tap a card to see the reading first. Open its scale with the button below it. You can share the air reading from its detail screen. At larger text sizes, the cards stack. The check-in comes before tomorrow's forecast and is available if the air data is missing. |
+| Today | Shows the place and reading time. The tinted cards show the air and pollen levels in words and numbers. Tap a card to see the reading first. Open its scale with the button below it. You can share the air reading from its detail screen. At larger text sizes, the cards stack. The check-in comes before tomorrow's forecast and is available if the air data is missing. Tap **Tomorrow’s forecast** for the date, station forecast, and pollen by type. The screen uses the saved forecast for that date. |
 | Listen | Keeps **Start listening**, **Stop listening**, and the active microphone indicator above the tab bar. Past sessions and tools are separate from capture controls. |
 | History | Shows the latest check-in and gives the comparison charts the primary action. Tap or drag a chart to highlight the same day across symptoms, air quality, and pollen. The pinned date bar steps between days or opens the day inspector. Use **Jump to date** in the inspector for the calendar. |
 | Report | Shows the selected period and a text summary. **Share report** stays above the tab bar when the PDF is ready. Tap **Preview report** to read it first. Expand **Advanced export** for raw records. |

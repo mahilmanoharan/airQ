@@ -4,6 +4,8 @@ Local feature commits and publishing `cook` to GitHub are authorized by the user
 
 ## Visual hierarchy and controls
 
+- **Today → Tomorrow’s forecast** opens the saved forecast for its displayed date and place. The detail shows the station’s highest forecast pollutant level and pollen by type. Missing forecasts are labeled. Today’s shortcut still appears only when a saved forecast has an air or pollen value for tomorrow.
+- Five targeted UI tests passed on iPhone 17 Pro / iOS 26.4. They cover the Today preview, opening tomorrow and returning at the largest text size, missing pollen, the existing Pollen screen, and the main-screen accessibility audit.
 - The verified usability and Apple framework work through the Air quality detail pass was pushed to `cook` as `5441e37`.
 - Air quality alerts starts with a setup status. The screen keeps both alert switches available and puts quiet hours, daily limits, and delivery timing under **How alerts work**.
 - Three targeted UI tests passed for alerts and More, including the main accessibility audit. Both Background updates states were visually checked on iPhone 17 Pro / iOS 26.4. Scheduled delivery and real notification permission remain physical-device checks.

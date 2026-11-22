@@ -32,7 +32,7 @@ struct PollenBreakdownView: View {
     }
 }
 
-private struct PollenForecastRow: View {
+struct PollenForecastRow: View {
     let title: String
     let index: Int?
 

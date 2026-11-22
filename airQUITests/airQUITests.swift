@@ -92,10 +92,37 @@ final class AirQUITests: XCTestCase {
 
     func testTheDashboardShowsTomorrowWithoutOpeningDetails() {
         let app = launch()
-        let tomorrow = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Air quality up to 68'")).firstMatch
-        for _ in 0..<4 where !tomorrow.waitForExistence(timeout: 2) { app.swipeUp() }
-        XCTAssertTrue(tomorrow.exists)
+        let tomorrow = app.buttons["tomorrowForecast"]
+        reveal(tomorrow, in: app)
+        XCTAssertTrue(tomorrow.label.contains("Air quality up to 68"), tomorrow.label)
         XCTAssertTrue(tomorrow.label.contains("Pollen 3 of 5"), tomorrow.label)
+    }
+
+    func testTomorrowOpensDatedForecastAtTheLargestTextSize() throws {
+        let app = launch(extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let tomorrow = app.buttons["tomorrowForecast"]
+        reveal(tomorrow, in: app)
+        tomorrow.tap()
+
+        let forecast = app.navigationBars["Tomorrow’s forecast"]
+        XCTAssertTrue(forecast.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["San Francisco"].exists)
+        let nextDay = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: .now))
+        XCTAssertTrue(app.staticTexts[nextDay.formatted(.dateTime.weekday(.wide).month(.wide).day())].exists)
+        reveal(app.staticTexts["Moderate · 68 on the AQI scale"], in: app)
+        let tree = app.descendants(matching: .any)["pollenType-tree"].firstMatch
+        reveal(tree, in: app)
+        XCTAssertEqual(tree.value as? String, "3 of 5, Moderate")
+        forecast.buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 5))
+    }
+
+    func testTomorrowShowsWhenPollenForecastIsUnavailable() {
+        let app = launch(extraArguments: ["-uiTestNoPollen", "YES"])
+        let tomorrow = app.buttons["tomorrowForecast"]
+        reveal(tomorrow, in: app)
+        tomorrow.tap()
+        reveal(app.staticTexts["Pollen forecast unavailable"], in: app)
     }
 
     func testYesterdaysMedicationAnswerCanBeReusedWithOneTap() {

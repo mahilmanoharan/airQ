@@ -9,6 +9,7 @@ struct DashboardView: View {
     /// False until the first load has finished, so "no reading yet" isn't flashed before it starts.
     @State private var hasAttemptedLoad = false
     @State private var openedMetric: DashboardMetric?
+    @State private var openedForecastDay: String?
 
     /// Open Settings when that's the fix (location denied), otherwise a retry.
     @ViewBuilder private var errorAction: some View {
@@ -55,7 +56,7 @@ struct DashboardView: View {
                 }
                 TodayCheckInCard()
                 if let snapshot = model.snapshot {
-                    TomorrowCard(snapshot: snapshot)
+                    TomorrowCard(snapshot: snapshot) { openedForecastDay = $0 }
                 }
             }
             .padding()
@@ -74,8 +75,13 @@ struct DashboardView: View {
                     .navigationTitle(metric.title)
             }
         }
-        .onChange(of: AppServices.shared.eraseRevision) { openedMetric = nil }
-        .onChange(of: tabOpenRevision) { openedMetric = nil }
+        .navigationDestination(item: $openedForecastDay) { dayKey in
+            if let snapshot = model.snapshot {
+                TomorrowForecastView(snapshot: snapshot, dayKey: dayKey)
+            }
+        }
+        .onChange(of: AppServices.shared.eraseRevision) { closeDetails() }
+        .onChange(of: tabOpenRevision) { closeDetails() }
         .task {
             await model.load()
             hasAttemptedLoad = true
@@ -94,6 +100,11 @@ struct DashboardView: View {
         .toolbar {
             if model.isLoading, model.snapshot != nil { ProgressView() }
         }
+    }
+
+    private func closeDetails() {
+        openedMetric = nil
+        openedForecastDay = nil
     }
 }
 
