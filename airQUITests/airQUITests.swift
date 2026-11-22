@@ -629,12 +629,20 @@ final class AirQUITests: XCTestCase {
         let backgroundUpdates = app.switches["backgroundWidgetRefresh"]
         XCTAssertTrue(backgroundUpdates.waitForExistence(timeout: 5))
         XCTAssertEqual(backgroundUpdates.value as? String, "0")
+        let status = app.staticTexts["Background updates are off"]
+        XCTAssertTrue(status.exists)
+        XCTAssertLessThan(status.frame.minY, backgroundUpdates.frame.minY)
         for label in ["Alert me about unhealthy air", "Alert me about high pollen"] {
             let toggle = app.switches[label]
             XCTAssertTrue(toggle.waitForExistence(timeout: 5), label)
             XCTAssertEqual(toggle.value as? String, "0", label)
         }
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'late or not at all'")).firstMatch.exists)
+        let timing = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'late or not at all'")).firstMatch
+        XCTAssertFalse(timing.exists)
+        let help = app.buttons["How alerts work"]
+        reveal(help, in: app)
+        help.tap()
+        XCTAssertTrue(timing.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'between 10 pm and 7 am'")).firstMatch.exists)
         // Threshold pickers only appear once an alert is on.
         XCTAssertFalse(app.staticTexts["Alert at"].exists)

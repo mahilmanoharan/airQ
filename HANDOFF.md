@@ -4,6 +4,9 @@ Local feature commits and publishing `cook` to GitHub are authorized by the user
 
 ## Visual hierarchy and controls
 
+- The verified usability and Apple framework work through the Air quality detail pass was pushed to `cook` as `5441e37`.
+- Air quality alerts starts with a setup status. The screen keeps both alert switches available and puts quiet hours, daily limits, and delivery timing under **How alerts work**.
+- Three targeted UI tests passed for alerts and More, including the main accessibility audit. Both Background updates states were visually checked on iPhone 17 Pro / iOS 26.4. Scheduled delivery and real notification permission remain physical-device checks.
 - Today uses reading-level tints and a filled daily check-in action. Save changes the card to a quieter “View your check-in” treatment. Air quality sharing moved to the Air quality detail toolbar.
 - Air quality and Pollen details start with the place, the reading and its meaning. Air quality marks older readings as **Last saved**. **See AQI scale** and **See pollen scale** open the reference without scrolling through charts. Missing pollen leaves the scale without a selected level.
 - Seven targeted dashboard UI tests passed. They cover both scales, stale AQI, unavailable pollen, and the pollutant, station, sharing, and history controls. The AQI detail and scale were visually checked on iPhone 17 Pro / iOS 26.4. The simulator is open on the Air quality detail with sample data.

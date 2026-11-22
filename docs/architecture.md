@@ -106,6 +106,8 @@ Erase observations only after the user confirms **Erase all data**. A startup fa
 
 To allow background refresh, turn on **Background updates** in **More → Air quality alerts**. `BackgroundRefresh` gives iOS an earliest start time of 65 minutes after scheduling. iOS decides when to run the task.
 
+Air quality alerts shows the setup status above the switches. Expand **How alerts work** for quiet hours, the daily limit, and delivery timing.
+
 A background run requires current location permission and a saved place. It uses `CachedPlaceLocation` to get the saved coordinates and name. It sends the rounded coordinates if it needs a new reading. It does not request a new location fix, look up a new place name, or collect Google hourly history. If you move, open the app to get widget readings for your new place.
 
 `AirQualityAlertPolicy` checks the AQI threshold and the pollen threshold. For pollen, it uses today's forecast. If alerts are enabled, `AirQualityAlerts` can post one local notification per kind per local day. Quiet hours are 22:00 to 07:00 local time.

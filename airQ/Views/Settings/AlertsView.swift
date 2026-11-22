@@ -15,10 +15,19 @@ struct AlertsView: View {
     var body: some View {
         List {
             Section {
+                setupStatus
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+            Section {
                 Toggle("Background updates", isOn: $refreshEnabled)
                     .accessibilityIdentifier("backgroundWidgetRefresh")
-            } footer: {
                 Text("Allow widgets and alerts to update when airQ is closed. Updates send the last saved area, rounded to about 1 km, while location access is granted.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if !refreshEnabled && alerts.permission == .denied {
+                Section { notificationStatus }
             }
             AlertSection(kind: .air, alerts: alerts, title: "Unhealthy air",
                          toggleLabel: "Alert me about unhealthy air", thresholds: AirQualityAlertSettings.airThresholds) {
@@ -28,38 +37,14 @@ struct AlertsView: View {
                          toggleLabel: "Alert me about high pollen", thresholds: AirQualityAlertSettings.pollenThresholds) {
                 "\(PollenPresentation.category(for: $0)) or higher"
             }
-            switch backgroundRefresh {
-            case .denied:
-                Section {
-                    Text("Background App Refresh is off for airQ, so alerts (and background widget updates) can't run. Turn it on in Settings › General › Background App Refresh.")
-                        .font(.footnote)
-                    Button("Open Settings") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-                    }
-                }
-            case .restricted:
-                Section {
-                    Text("Background App Refresh is restricted on this device (for example by Screen Time or a device policy), so alerts and background widget updates can't run.")
-                        .font(.footnote)
-                }
-            default:
-                EmptyView()
-            }
-            if alerts.permission == .denied {
-                Section {
-                    Text("Notifications are turned off for airQ in Settings.").font(.footnote)
-                    Button("Open Settings") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-                    }
-                }
-            }
             Section {
-                Text("airQ checks in the background when iOS allows it, so an alert can arrive late or not at all. Each kind is sent at most once a day, for your last known place; open airQ to update the place. Nothing is sent between 10 pm and 7 am: an alert held overnight comes with the first check after 7 am, if the air is still that bad. Pollen alerts use today's forecast. Alerts are generated on this iPhone and share nothing.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                AlertDeliveryDetails()
             }
         }
+        .scrollContentBackground(.hidden)
+        .background { AirQStyle.atmosphere }
         .navigationTitle("Air quality alerts")
+        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: refreshEnabled) { BackgroundRefresh.schedule() }
         .task { await alerts.refreshPermission() }
         .onChange(of: scenePhase, initial: true) { _, phase in
@@ -67,6 +52,71 @@ struct AlertsView: View {
             backgroundRefresh = UIApplication.shared.backgroundRefreshStatus
             Task { await alerts.refreshPermission() }
         }
+    }
+
+    @ViewBuilder private var setupStatus: some View {
+        if !refreshEnabled {
+            statusCard("Background updates are off", symbol: "bell.slash",
+                       detail: "Turn on Background updates below so airQ can check conditions while it’s closed.")
+        } else if backgroundRefresh == .denied {
+            statusCard("Background App Refresh is off", symbol: "arrow.clockwise",
+                       detail: "Turn it on in Settings › General › Background App Refresh.", showsSettings: true)
+        } else if backgroundRefresh == .restricted {
+            statusCard("Background App Refresh is restricted", symbol: "lock",
+                       detail: "Screen Time or a device policy can restrict background widget updates and alerts.")
+        } else if alerts.permission == .denied {
+            notificationStatus
+        } else if alerts.settings.isAnyEnabled {
+            statusCard("Alerts selected", symbol: "bell",
+                       detail: "Background checks need location access and use your last saved place.")
+        } else {
+            statusCard("Choose your alerts", symbol: "bell",
+                       detail: "Turn on unhealthy air, high pollen, or both. iOS may ask for notification permission.")
+        }
+    }
+
+    private var notificationStatus: some View {
+        statusCard("Notifications are off", symbol: "bell.slash",
+                   detail: "Allow notifications for airQ in Settings to receive alerts.", showsSettings: true)
+    }
+
+    private func statusCard(_ title: String, symbol: String, detail: String, showsSettings: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: symbol)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(AirQStyle.accent)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.title2.bold()).fontDesign(.rounded)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Text(detail)
+            if showsSettings {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background { AirQStyle.tintedSurface(AirQStyle.accent) }
+    }
+}
+
+private struct AlertDeliveryDetails: View {
+    var body: some View {
+        DisclosureGroup("How alerts work") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("iOS decides when airQ can check in the background. An alert can arrive late or not at all.")
+                Text("Quiet hours are between 10 pm and 7 am. An alert can arrive after 7 am if conditions still meet your alert level.")
+                Text("Each alert type can arrive once a day for your last saved place. Open airQ to update that place. Pollen alerts use today’s forecast.")
+            }
+            .padding(.vertical, 8)
+        }
+        .tint(.primary)
+        .frame(minHeight: 44)
     }
 }
 
