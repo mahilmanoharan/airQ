@@ -6,26 +6,15 @@ import RespiratoryKit
 struct TrendsPanels: View {
     let data: ChartData
     @Binding var selection: Date?
-    let inspectDay: () -> Void
     @Environment(\.openRoute) private var openRoute
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                ViewThatFits(in: .horizontal) {
-                    HStack {
-                        heading
-                        Spacer(minLength: 8)
-                        inspectButton
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        heading
-                        inspectButton
-                    }
-                }
+                Text("Symptoms & surroundings").font(.headline).accessibilityAddTraits(.isHeader)
                 if data.checkIns.contains(where: { $0.severity != nil }) || !data.hourly.isEmpty
                     || !data.waqi.isEmpty || !data.pollen.isEmpty {
-                    Text("Tap a chart to select its day.")
+                    Text("Tap or drag across a chart to compare the same day.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -54,16 +43,6 @@ struct TrendsPanels: View {
         .airQCard()
     }
 
-    private var heading: some View {
-        Text("Symptoms & surroundings").font(.headline).accessibilityAddTraits(.isHeader)
-    }
-
-    private var inspectButton: some View {
-        Button("Inspect a day", systemImage: "calendar", action: inspectDay)
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .accessibilityHint("Opens details with a date picker and day navigation.")
-    }
 }
 
 struct HistoryMissingSeries: View {
@@ -86,6 +65,7 @@ struct TrendsPanel<Content: ChartContent>: View {
     var showsYAxis = true
     var alignsYAxis = false
     var yTicks: [Int]?
+    var showsDayGuide = false
     @ChartContentBuilder let content: () -> Content
     @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .caption2) private var axisWidth = 32
@@ -113,11 +93,31 @@ struct TrendsPanel<Content: ChartContent>: View {
                                   xEnd: .value("Selected day end", day.interval.end))
                         .foregroundStyle(AirQStyle.accent.opacity(0.16))
                         .accessibilityHidden(true)
+                    if showsDayGuide {
+                        RuleMark(x: .value("Selected day", day.interval.start.addingTimeInterval(day.interval.duration / 2)))
+                            .foregroundStyle(AirQStyle.accent)
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                            .accessibilityHidden(true)
+                    }
                 }
                 content()
             }
             .chartXScale(domain: data.domain.start...data.domain.end, range: .plotDimension(padding: 0))
             .chartXSelection(value: chartSelection)
+            .chartOverlay { proxy in
+                if showsDayGuide {
+                    GeometryReader { geometry in
+                        if let anchor = proxy.plotFrame {
+                            let plot = geometry[anchor]
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .simultaneousGesture(selectionGesture(in: plot, proxy: proxy))
+                                .accessibilityHidden(true)
+                        }
+                    }
+                }
+            }
+            .accessibilityIdentifier("historyChart-\(title)")
             .chartLegend(.visible)
             .chartXAxis {
                 if typeSize.isAccessibilitySize {
@@ -153,6 +153,27 @@ struct TrendsPanel<Content: ChartContent>: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    private func selectionGesture(in plot: CGRect, proxy: ChartProxy) -> some Gesture {
+        let tap = SpatialTapGesture().onEnded { value in
+            if plot.contains(value.location) { select(at: value.location.x, in: plot, proxy: proxy) }
+        }
+        let drag = DragGesture(minimumDistance: 10)
+            .onChanged { value in selectDuringDrag(value, in: plot, proxy: proxy) }
+            .onEnded { value in selectDuringDrag(value, in: plot, proxy: proxy) }
+        return tap.simultaneously(with: drag)
+    }
+
+    private func selectDuringDrag(_ value: DragGesture.Value, in plot: CGRect, proxy: ChartProxy) {
+        guard plot.contains(value.startLocation),
+              abs(value.translation.width) > abs(value.translation.height) else { return }
+        select(at: value.location.x, in: plot, proxy: proxy)
+    }
+
+    private func select(at x: CGFloat, in plot: CGRect, proxy: ChartProxy) {
+        let position = min(max(x, plot.minX), plot.maxX) - plot.minX
+        chartSelection.wrappedValue = proxy.value(atX: position, as: Date.self)
     }
 
     @AxisMarkBuilder private func numericAxisContent(_ mark: AxisValue) -> some AxisMark {

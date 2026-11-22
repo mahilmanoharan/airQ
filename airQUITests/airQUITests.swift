@@ -272,6 +272,58 @@ final class AirQUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Symptoms & surroundings"].exists)
     }
 
+    func testComparisonKeepsTheSelectedDayAcrossChartsAndDetails() {
+        let app = launch(route: "trends", extraArguments: ["-uiTestHistory", "YES", "-uiTestHistoryPeriod", "30"])
+        let compare = app.buttons["Compare with air & pollen"]
+        XCTAssertTrue(compare.waitForExistence(timeout: 10))
+        compare.tap()
+
+        let details = app.buttons["comparisonOpenDay"]
+        XCTAssertTrue(details.waitForExistence(timeout: 5))
+        let latest = details.value as? String
+        XCTAssertNotNil(latest)
+        XCTAssertFalse(app.buttons["Next day"].isEnabled)
+        app.buttons["Previous day"].tap()
+        let previous = details.value as? String
+        XCTAssertNotEqual(previous, latest)
+        XCTAssertTrue(app.buttons["Next day"].isEnabled)
+        let chart = app.descendants(matching: .any)["historyChart-Daytime symptoms"].firstMatch
+        reveal(chart, in: app)
+        let start = chart.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.50))
+        start.tap()
+        let startDate = details.value as? String
+        XCTAssertNotEqual(startDate, previous)
+        start.press(
+            forDuration: 0.15, thenDragTo: chart.coordinate(withNormalizedOffset: CGVector(dx: 0.34, dy: 0.50)))
+        let selected = details.value as? String
+        XCTAssertNotEqual(selected, startDate)
+        XCTAssertTrue(details.isHittable)
+        details.tap()
+        XCTAssertTrue(app.navigationBars["Day details"].waitForExistence(timeout: 5))
+        let date = app.staticTexts["historySelectedDay"]
+        XCTAssertEqual(date.label, selected)
+        app.navigationBars["Day details"].buttons.firstMatch.tap()
+        XCTAssertEqual(details.value as? String, selected)
+    }
+
+    func testComparisonDockLeavesRoomForChartsAtTheLargestTextSize() {
+        let app = launch(route: "trends", extraArguments: [
+            "-uiTestHistory", "YES",
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"
+        ])
+        let compare = app.buttons["Compare with air & pollen"]
+        reveal(compare, in: app)
+        compare.tap()
+        let details = app.buttons["comparisonOpenDay"]
+        XCTAssertTrue(details.waitForExistence(timeout: 5))
+        XCTAssertLessThan(details.frame.height, app.frame.height * 0.20)
+        let date = details.value as? String
+        app.buttons["Previous day"].tap()
+        XCTAssertNotEqual(details.value as? String, date)
+        details.tap()
+        XCTAssertTrue(app.navigationBars["Day details"].waitForExistence(timeout: 5))
+    }
+
     func testOnlyAtNightClearsDaytimeSymptomsAndSkipsTheirQuestions() {
         let app = launch(route: "checkIn")
         startTodaysCheckIn(app)

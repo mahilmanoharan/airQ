@@ -7,7 +7,8 @@ struct HistorySymptomsPanel: View {
     @Binding var selection: Date?
 
     var body: some View {
-        TrendsPanel(title: "Daytime symptoms", data: data, selection: $selection, height: 95, yTicks: [0, 1, 2, 3]) {
+        TrendsPanel(title: "Daytime symptoms", data: data, selection: $selection, height: 95,
+                    yTicks: [0, 1, 2, 3], showsDayGuide: true) {
             ForEach(data.checkIns, id: \.day) { point in
                 if let severity = point.severity {
                     PointMark(x: .value("Day", point.day, unit: .day), y: .value("Severity", severity))
@@ -33,7 +34,8 @@ struct HistoryAirPanel: View {
     @Binding var selection: Date?
 
     var body: some View {
-        TrendsPanel(title: "Air quality (AQI)", data: data, selection: $selection, height: 110, alignsYAxis: true) {
+        TrendsPanel(title: "Air quality (AQI)", data: data, selection: $selection, height: 110,
+                    alignsYAxis: true, showsDayGuide: true) {
             ForEach(Array(data.hourly.enumerated()), id: \.offset) { _, point in
                 PointMark(x: .value("Time", point.date), y: .value("AQI", point.value))
                     .symbolSize(8)
@@ -58,7 +60,8 @@ struct HistoryPollenPanel: View {
     @Binding var selection: Date?
 
     var body: some View {
-        TrendsPanel(title: "Pollen forecast (0–5)", data: data, selection: $selection, height: 110, yTicks: [0, 1, 3, 5]) {
+        TrendsPanel(title: "Pollen forecast (0–5)", data: data, selection: $selection, height: 110,
+                    yTicks: [0, 1, 3, 5], showsDayGuide: true) {
             ForEach(Array(data.pollen.enumerated()), id: \.offset) { _, bar in
                 BarMark(x: .value("Day", bar.day, unit: .day), y: .value("Pollen", bar.upi))
                     .foregroundStyle(by: .value("Type", TrendsLabels.pollen(bar.code)))

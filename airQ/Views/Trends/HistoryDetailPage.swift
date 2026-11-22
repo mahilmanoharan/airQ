@@ -50,7 +50,9 @@ struct HistoryDetailPage: View {
                 }
                 #endif
             }
-            .background(AirQStyle.page)
+            .background {
+                if detail == .comparison { AirQStyle.atmosphere } else { AirQStyle.page }
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) { selectedDayInset }
             .navigationDestination(isPresented: $showingDayDetails) {
                 dayDetails.navigationTitle(HistoryDetail.day.title)
@@ -65,10 +67,7 @@ struct HistoryDetailPage: View {
     private var comparison: some View {
         Group {
             HistoryCoverage(data: data)
-            TrendsPanels(data: data, selection: $selection) {
-                if selection == nil { selection = data.days.last?.interval.start }
-                showingDayDetails = true
-            }
+            TrendsPanels(data: data, selection: comparisonSelection)
             .id("comparison")
             if let symptomDays, !symptomDays.isEmpty {
                 SymptomDaysCard(table: symptomDays).id("symptomDays")
@@ -82,8 +81,14 @@ struct HistoryDetailPage: View {
         }
     }
 
+    private var comparisonSelection: Binding<Date?> {
+        Binding(get: { selection ?? data.days.last?.interval.start }, set: { selection = $0 })
+    }
+
     @ViewBuilder private var selectedDayInset: some View {
-        if let selection, let day = data.day(at: selection) {
+        if detail == .comparison {
+            HistoryComparisonDock(data: data, selection: comparisonSelection) { showingDayDetails = true }
+        } else if let selection, let day = data.day(at: selection) {
             Group {
                 if typeSize.isAccessibilitySize {
                     Button { showingDayDetails = true } label: {

@@ -52,6 +52,7 @@ struct TrendsSelectionSummary: View {
                     Text(DayKeys.display(day.dayKey, style: .dateTime.weekday(.wide).month(.wide).day()))
                         .font(.title.bold()).fontDesign(.rounded)
                         .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("historySelectedDay")
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 12) { datePickerRow(for: day, in: range) }
                         VStack(alignment: .leading, spacing: 0) { datePickerRow(for: day, in: range) }
