@@ -695,6 +695,26 @@ final class AirQUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Welcome to airQ"].exists)
     }
 
+    func testWelcomeUsesTheFullTextWidthAndKeepsGetStartedVisible() {
+        let app = launch(extraArguments: [
+            "-showWelcome", "YES",
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"
+        ])
+        let title = app.staticTexts["Welcome to airQ"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+        let leadingEdge = title.frame.minX
+        let getStarted = app.buttons["Get started"]
+        XCTAssertTrue(getStarted.isHittable)
+        let buttonPosition = getStarted.frame.minY
+
+        let location = app.staticTexts["Your approximate location"]
+        reveal(location, in: app)
+        XCTAssertEqual(location.frame.minX, leadingEdge, accuracy: 2)
+        XCTAssertEqual(getStarted.frame.minY, buttonPosition, accuracy: 2)
+        getStarted.tap()
+        XCTAssertTrue(app.buttons["todayMetric-airQuality"].waitForExistence(timeout: 10))
+    }
+
     func testTheNumbersCanBeExplainedAndTodayIsMarked() {
         let app = launch()
         openMetric("airQuality", title: "Air quality", in: app)

@@ -42,6 +42,8 @@ Start at [airQApp.swift](../airQ/App/airQApp.swift). For air readings, continue 
 | Report | Shows the selected period and a text summary. **Share report** stays above the tab bar when the PDF is ready. Tap **Preview report** to read it first. Expand **Advanced export** for raw records. |
 | More | Shows Life events and Air quality alerts. In Life events, **Add event** stays below the list. Expand **Data & privacy** for stored data, app information, and erasure. |
 
+The welcome screen on Today explains location access before **Get started**. At accessibility text sizes, each icon sits above its description. **Get started** stays visible as the introduction scrolls.
+
 Tap the check-in card to open the first question if the app has loaded today's records and there is no saved check-in. If a check-in exists or the app cannot start a new one, the card opens the check-in overview. The flow shows one question per card. Use **Next** or **Skip** at the bottom to continue. **Save** stays in the same area while you review the answers.
 
 Pollen details show the three pollen types and the forecast dates in separate rows. A missing value shows **Unavailable**. Expand **Plant details** to see the plant forecasts.
