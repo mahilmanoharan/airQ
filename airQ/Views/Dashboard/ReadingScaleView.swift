@@ -7,9 +7,6 @@ struct ReadingScaleView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(metric == .airQuality ? "AQI scale" : "Pollen scale")
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
             switch metric {
             case .airQuality:
                 ForEach(AirQualityPresentation.bands, id: \.category) { band in
@@ -36,7 +33,7 @@ struct ReadingScaleView: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Circle().fill(color).frame(width: 8, height: 8)
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.subheadline)
+                Text(title).font(.subheadline.weight(isCurrent ? .semibold : .regular))
                 if isCurrent {
                     Text(metric == .airQuality ? "Your reading" : "Your forecast")
                         .font(.caption.weight(.semibold))
@@ -48,6 +45,12 @@ struct ReadingScaleView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background {
+            if isCurrent {
+                RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.12))
+            }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(title), \(value)\(isCurrent ? ", selected level" : "")")
     }

@@ -36,17 +36,21 @@ Start at [airQApp.swift](../airQ/App/airQApp.swift). For air readings, continue 
 
 | Tab | Function |
 | --- | --- |
-| Today | Shows the place, reading time, AQI, pollen, and tomorrow's forecast. Tap a reading card for its details and scale. The cards stack at accessibility text sizes. You can start a check-in if the air data is unavailable. |
-| Listen | Starts microphone capture when you tap **Start listening**. Opens past listening sessions from a separate link. |
-| History | Shows the latest check-in. Opens a date inspector, comparison charts, and listening history. The calendar, day arrows, and charts use the same selected date. |
-| Report | Shows the selected period and a text summary. You can preview the report, share a one-page US Letter PDF, or open raw export under **Advanced**. The app generates the PDF in memory. |
-| More | Opens settings and other tools, including alerts and data erasure. |
+| Today | Shows the place and reading time. The tinted cards show the air and pollen levels in words and numbers. Tap a card to see the reading first. Open its scale with the button below it. You can share the air reading from its detail screen. At larger text sizes, the cards stack. The check-in comes before tomorrow's forecast and is available if the air data is missing. |
+| Listen | Keeps **Start listening**, **Stop listening**, and the active microphone indicator above the tab bar. Past sessions and tools are separate from capture controls. |
+| History | Shows the latest check-in and gives the comparison charts the primary action. **View a day** shows the date and saved readings. Use **Jump to date** for the calendar or the pinned buttons to move one day at a time. The inspector and charts use the same selected date. |
+| Report | Shows the selected period and a text summary. **Share report** stays above the tab bar when the PDF is ready. Tap **Preview report** to read it first. Expand **Advanced export** for raw records. |
+| More | Shows Life events and Air quality alerts. Expand **Data & privacy** for stored data, app information, and erasure. |
 
-Tap the check-in card to open the first question if the app has loaded today's records and there is no saved check-in. If a check-in exists or the app cannot start a new one, the card opens the check-in overview. The flow shows one question per card. Use **Next** or **Skip** to continue.
+Tap the check-in card to open the first question if the app has loaded today's records and there is no saved check-in. If a check-in exists or the app cannot start a new one, the card opens the check-in overview. The flow shows one question per card. Use **Next** or **Skip** at the bottom to continue. **Save** stays in the same area while you review the answers.
 
 `TabDestination` maps routes to the correct tab and screen. Keep existing route IDs so links continue to work. A Listen link opens the root of the Listen tab. The Siri action that saves a no-symptoms check-in requires device authentication.
 
-`HistoryPeriod` gives History and Report the same selection of 7, 30, or 90 calendar days. Pass the period and its setter separately through the environment. The period, active tab, and `RecordRevision` control when each screen loads its data. Provider writes, check-in saves, and a return to the foreground can change the revision. When the load inputs change, the screen hides the old results and share actions.
+`SpotlightNavigation` submits four public screen descriptions to the iPhone search index. A Spotlight activity opens the matching screen through the same route. Only the known shortcut IDs can open a screen. The index contains no personal observations or report data.
+
+In the report preview, **View print layout** uses PDFKit to show the PDF from **Share report**. The page supports pinch to zoom. The print layout closes if its PDF changes or becomes unavailable.
+
+`HistoryPeriod` gives History and Report the same selection of 7, 30, or 90 calendar days. At larger text sizes, both screens use a menu for this selection. Pass the period and its setter separately through the environment. The period, active tab, and `RecordRevision` control when each screen loads its data. Provider writes, check-in saves, and a return to the foreground can change the revision. When the load inputs change, the screen hides the old results and share actions.
 
 ## Data and concurrency behavior
 

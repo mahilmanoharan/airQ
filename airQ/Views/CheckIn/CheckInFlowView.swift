@@ -8,6 +8,7 @@ struct CheckInFlowView: View {
     let target: CheckInViewModel.Target
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     #if DEBUG
     @Environment(\.openRoute) private var openRoute
     #endif
@@ -20,17 +21,19 @@ struct CheckInFlowView: View {
             if isDone {
                 CheckInDoneView(target: target) { dismiss() }
             } else {
-                ProgressDots(steps: CheckInFlow.steps(for: model.draft), current: step)
+                CheckInProgress(steps: CheckInFlow.steps(for: model.draft), current: step)
                 ScrollView {
                     card
                         .padding()
-                        .id(step)
-                        .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
-                                                removal: .opacity))
+                        .frame(maxWidth: 720)
+                        .frame(maxWidth: .infinity)
                 }
+                .id(step)
+                .transition(.opacity)
                 bottomBar
             }
         }
+        .background { AirQStyle.atmosphere }
         .navigationTitle(target == .today ? "Today" : "Yesterday")
         .navigationBarTitleDisplayMode(.inline)
         // One job on screen: no tab bar, and one clear way out ("Back" below is for the previous card).
@@ -61,6 +64,7 @@ struct CheckInFlowView: View {
     }
 
     private var dayWord: String { target == .today ? "today" : "yesterday" }
+    private var hasAnswers: Bool { model.draft.answeredCount > 0 || model.draft.peakFlowLPM != nil }
 
     @ViewBuilder private var card: some View {
         switch step {
@@ -126,9 +130,7 @@ struct CheckInFlowView: View {
                 PeakFlowField(value: model.draft.peakFlowLPM) { model.setPeakFlow($0) }
             }
         case .review:
-            CheckInReview(model: model, target: target) {
-                Task { if await model.save() { isDone = true } }
-            }
+            CheckInReview(model: model, hasAnswers: hasAnswers)
         }
     }
 
@@ -147,30 +149,42 @@ struct CheckInFlowView: View {
     }
 
     private var bottomBar: some View {
-        HStack {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 4))
+            : AnyLayout(HStackLayout(spacing: 12))
+        return layout {
             if let previous = CheckInFlow.step(before: step, for: model.draft) {
-                Button("Back", systemImage: "chevron.left") { step = previous }
+                Button { step = previous } label: {
+                    Label("Back", systemImage: "chevron.left")
+                        .frame(minHeight: 44)
+                }
+                .disabled(model.isSaving)
             }
-            Spacer()
-            if step != .review {
-                let steps = CheckInFlow.steps(for: model.draft)
-                Button(CheckInFlow.isAnswered(step, in: model.draft) ? "Next" : "Skip") { advance() }
-                    .buttonStyle(.borderedProminent)
-                .foregroundStyle(AirQStyle.onAccent)
-                    .controlSize(.large)
-                    .frame(minWidth: 88, minHeight: 44)
-                    .accessibilityHint("Question \((steps.firstIndex(of: step) ?? 0) + 1) of \(steps.count)")
+            Button(action: primaryAction) {
+                Text(actionTitle)
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 44)
             }
+            .buttonStyle(.borderedProminent)
+            .foregroundStyle(AirQStyle.onAccent)
+            .controlSize(.large)
+            .disabled(step == .review && (model.isSaving || !hasAnswers))
         }
-        .padding()
-        .background(.bar)
+        .airQActionBar()
     }
 
-    private func advance() {
-        if let next = CheckInFlow.step(after: step, for: model.draft) { step = next }
+    private var actionTitle: String {
+        if step == .review { return target == .today ? "Save today" : "Save yesterday" }
+        return CheckInFlow.isAnswered(step, in: model.draft) ? "Next" : "Skip"
     }
 
-
+    private func primaryAction() {
+        if step == .review {
+            Task { if await model.save() { isDone = true } }
+        } else if let next = CheckInFlow.step(after: step, for: model.draft) {
+            step = next
+        }
+    }
 }
 
 private struct QuestionCard<Answers: View>: View {
@@ -186,44 +200,52 @@ private struct QuestionCard<Answers: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(question).font(.title2.weight(.semibold))
-            if let hint { Text(hint).font(.subheadline).foregroundStyle(.secondary) }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(question)
+                    .font(.title2.bold())
+                    .fontDesign(.rounded)
+                    .accessibilityAddTraits(.isHeader)
+                if let hint { Text(hint).font(.subheadline) }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background { AirQStyle.tintedSurface(AirQStyle.accent) }
             answers()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-/// One dot per card: filled up to the current one. The number of dots follows the answers.
-private struct ProgressDots: View {
+private struct CheckInProgress: View {
     let steps: [CheckInFlow.Step]
     let current: CheckInFlow.Step
 
     var body: some View {
         let index = steps.firstIndex(of: current) ?? 0
-        HStack(spacing: 6) {
-            ForEach(Array(steps.enumerated()), id: \.element) { offset, _ in
-                Capsule()
-                    .fill(offset <= index ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary))
-                    .frame(width: offset == index ? 22 : 8, height: 8)
+        VStack(alignment: .leading, spacing: 6) {
+            if current != .review {
+                Text("Question \(index + 1)")
+                    .font(.subheadline.weight(.semibold))
             }
+            ProgressView(value: Double(index + 1), total: Double(steps.count))
+                .accessibilityHidden(true)
         }
-        .padding(.vertical, 12)
-        // Decorative: VoiceOver hears the position on the Next/Skip button instead of a separate stop.
-        .accessibilityHidden(true)
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .frame(maxWidth: 720)
     }
 }
 
-/// The last card: what will be saved, in words, and the one Save button.
 private struct CheckInReview: View {
     let model: CheckInViewModel
-    let target: CheckInViewModel.Target
-    let save: () -> Void
+    let hasAnswers: Bool
 
     var body: some View {
         let draft = model.draft
         VStack(alignment: .leading, spacing: 14) {
-            Text("Ready to save").font(.title2.weight(.semibold))
+            Text(hasAnswers ? "Ready to save" : "Review your check-in")
+                .font(.title2.bold()).fontDesign(.rounded)
+                .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 8) {
                 LabeledContent("Symptoms", value: draft.daytimeSymptoms == nil && draft.nightWaking == nil
                                ? "Not answered" : CheckInLabels.summary(draft))
@@ -234,17 +256,14 @@ private struct CheckInReview: View {
                 if let peakFlow = draft.peakFlowLPM { LabeledContent("Peak flow", value: "\(peakFlow) L/min") }
             }
             .font(.subheadline)
-            Text("Unanswered questions stay unanswered; they're never counted as \"no\".")
-                .font(.footnote).foregroundStyle(.secondary)
-            if let message = model.errorMessage { Text(message).foregroundStyle(.red) }
-            Button(action: save) {
-                Text("Save \(target == .today ? "today" : "yesterday")").font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 52)
+            if !hasAnswers {
+                Text("Go back and answer one question to save this check-in.")
+            } else {
+                Text("Skipped questions stay unanswered.")
             }
-            .buttonStyle(.borderedProminent)
-                .foregroundStyle(AirQStyle.onAccent)
-            .disabled(model.isSaving || draft.answeredCount == 0 && draft.peakFlowLPM == nil)
+            if let message = model.errorMessage { Text(message).foregroundStyle(.red) }
         }
+        .airQCard()
     }
 }
 
@@ -253,29 +272,41 @@ private struct CheckInDoneView: View {
     let done: () -> Void
     @State private var appeared = false
     @Environment(\.openTab) private var openTab
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 72))
-                .foregroundStyle(.green)
-                .symbolEffect(.bounce, value: appeared)
-                .accessibilityHidden(true)
-            Text(target == .today ? "Today is logged" : "Yesterday is logged").font(.title2.weight(.semibold))
-            Text("It's in History now, next to the air that day.")
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Spacer()
+        ScrollView {
+            VStack(spacing: 16) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(AirQStyle.accent)
+                    .symbolEffect(.bounce, value: appeared)
+                    .accessibilityHidden(true)
+                Text(target == .today ? "Today is logged" : "Yesterday is logged")
+                    .font(.title2.bold()).fontDesign(.rounded)
+                    .accessibilityAddTraits(.isHeader)
+                Text("It's in History now, next to the air that day.")
+                Button("See it in History", systemImage: "chart.xyaxis.line") {
+                    done()
+                    openTab(.trends)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
+            .multilineTextAlignment(.center)
+            .padding(20)
+            .frame(maxWidth: .infinity)
+            .background { AirQStyle.tintedSurface(AirQStyle.accent) }
+            .padding()
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             Button(action: done) { Text("Done").frame(maxWidth: .infinity, minHeight: 52) }
                 .buttonStyle(.borderedProminent)
                 .foregroundStyle(AirQStyle.onAccent)
-            Button("See it in History", systemImage: "chart.xyaxis.line") {
-                done()
-                openTab(.trends)
-            }
+                .airQActionBar()
         }
-        .padding()
-        .onAppear { appeared = true }
+        .onAppear { if !reduceMotion { appeared = true } }
     }
 }

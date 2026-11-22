@@ -4,6 +4,8 @@ import AirQualityKit
 struct ReadingCardView: View {
     let metric: DashboardMetric
     let snapshot: AQSnapshot
+    var showsDetailsLink = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var title: String { metric == .airQuality ? "Air quality" : "Pollen forecast" }
 
@@ -36,7 +38,7 @@ struct ReadingCardView: View {
         return date.formatted(Date.FormatStyle(timeZone: .gmt).weekday(.abbreviated).month(.abbreviated).day())
     }
 
-    private var meaning: String {
+    private var meaning: String? {
         switch metric {
         case .airQuality:
             switch AirQualityPresentation.band(for: snapshot.aqi).range.lowerBound {
@@ -49,7 +51,7 @@ struct ReadingCardView: View {
             }
         case .pollen:
             switch snapshot.pollenIndex {
-            case nil: "No forecast is available."
+            case nil: nil
             case 0: "No pollen is forecast."
             case 1, 2: "People sensitive to pollen may still notice symptoms."
             default: "People sensitive to pollen are more likely to notice symptoms."
@@ -69,26 +71,37 @@ struct ReadingCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.subheadline.weight(.semibold))
+            Label(title, systemImage: metric == .airQuality ? "wind" : "leaf.fill")
+                .font(.subheadline.weight(.semibold))
+                .labelStyle(.titleAndIcon)
             if let forecastDay {
                 Text(forecastDay).font(.caption).foregroundStyle(.secondary)
             }
-            if let value {
-                Text(value).font(.title2.weight(.semibold)).monospacedDigit()
-            }
             Label {
-                Text(category).font(.subheadline.weight(.semibold))
+                Text(category).font(.title3.bold()).fontDesign(.rounded)
             } icon: {
-                Circle().fill(levelColor).frame(width: 8, height: 8)
+                Circle().fill(levelColor).frame(width: 9, height: 9).accessibilityHidden(true)
             }
-            Text(meaning)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            if let meaning {
+                Text(meaning)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+            }
+            if let value {
+                Text(value).font(.subheadline).monospacedDigit()
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: value)
+            }
+            if showsDetailsLink {
+                Text("See details")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AirQStyle.accent)
+            }
         }
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
-        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .background { AirQStyle.tintedSurface(levelColor) }
+        .contentShape(RoundedRectangle(cornerRadius: 24))
     }
 }

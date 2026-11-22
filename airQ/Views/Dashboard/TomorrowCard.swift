@@ -9,7 +9,7 @@ struct TomorrowCard: View {
     var body: some View {
         if let day = TimelineScheduler.tomorrow(for: snapshot) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Tomorrow’s forecast")
+                Label("Tomorrow’s forecast", systemImage: "calendar")
                     .font(.headline)
                 if let aqi = day.aqiPeak {
                     Text("Air quality up to \(aqi) · \(AirQualityPresentation.category(for: aqi))")

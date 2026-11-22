@@ -5,11 +5,15 @@ import RespiratoryKit
 struct DashboardMetricDetailView: View {
     let metric: DashboardMetric
     let snapshot: AQSnapshot
+    @State private var showsScale = false
+
+    private var scaleTitle: String { metric == .airQuality ? "AQI scale" : "Pollen scale" }
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    readingSummary.id("currentReading")
                     switch metric {
                     case .airQuality:
                         AirQualityDetailContent(snapshot: snapshot)
@@ -22,8 +26,6 @@ struct DashboardMetricDetailView: View {
                                 .airQCard()
                         }
                     }
-                    ReadingScaleView(metric: metric, snapshot: snapshot)
-                        .id("scale")
                 }
                 .padding()
                 .frame(maxWidth: 720)
@@ -37,14 +39,67 @@ struct DashboardMetricDetailView: View {
                     proxy.scrollTo(anchor, anchor: .top)
                 } else if defaults.bool(forKey: "explainScale") {
                     await Task.yield()
-                    proxy.scrollTo("scale", anchor: .top)
+                    showsScale = true
                 }
             }
             #endif
         }
-        .background(AirQStyle.page)
+        .background { AirQStyle.atmosphere }
         .navigationTitle(metric.title)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showsScale) {
+            NavigationStack {
+                ScrollView {
+                    ReadingScaleView(metric: metric, snapshot: snapshot)
+                        .padding()
+                        .frame(maxWidth: 720)
+                        .frame(maxWidth: .infinity)
+                }
+                .background { AirQStyle.atmosphere }
+                .navigationTitle(scaleTitle)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { showsScale = false }
+                    }
+                }
+            }
+        }
+        .toolbar {
+            if metric == .airQuality {
+                ShareLink(item: AirQualitySummary.sentence(for: snapshot)) {
+                    Label("Share air quality", systemImage: "square.and.arrow.up")
+                }
+            }
+        }
+    }
+
+    private var readingSummary: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(snapshot.locationName)
+                .font(.title2.bold()).fontDesign(.rounded)
+                .accessibilityAddTraits(.isHeader)
+            if let readingTime { Text(readingTime).font(.subheadline) }
+            ReadingCardView(metric: metric, snapshot: snapshot, showsDetailsLink: false)
+            Button { showsScale = true } label: {
+                Label(metric == .airQuality ? "See AQI scale" : "See pollen scale", systemImage: "list.bullet")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 36)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+        }
+    }
+
+    private var readingTime: String? {
+        switch metric {
+        case .airQuality:
+            let time = snapshot.lastUpdated.formatted(date: .abbreviated, time: .shortened)
+            return snapshot.isFresh(asOf: .now, within: AQSnapshot.freshFor) ? "Updated \(time)" : "Last saved \(time)"
+        case .pollen:
+            guard snapshot.pollenIndex != nil, let date = snapshot.pollenFetchedAt else { return nil }
+            return "Forecast retrieved \(date.formatted(date: .abbreviated, time: .shortened))"
+        }
     }
 }
 

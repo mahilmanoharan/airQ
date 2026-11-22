@@ -28,31 +28,24 @@ struct DashboardEssentialsView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(snapshot.locationName)
-                    .font(.title2.weight(.semibold))
+                    .font(.largeTitle.bold())
+                    .fontDesign(.rounded)
                     .accessibilityAddTraits(.isHeader)
                 Text(savedReading
                      ? "Last saved \(snapshot.lastUpdated.formatted(date: .abbreviated, time: .shortened))"
                      : "Updated \(snapshot.lastUpdated.formatted(date: .omitted, time: .shortened))")
-                    .font(.footnote)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-            if typeSize.isAccessibilitySize {
+            if typeSize >= .xxLarge {
                 VStack(spacing: 10) {
                     ForEach(DashboardMetric.allCases) { card($0) }
                 }
             } else {
-                ScrollView(.horizontal) {
-                    HStack(alignment: .top, spacing: 10) {
-                        ForEach(DashboardMetric.allCases) { metric in
-                            card(metric)
-                                .containerRelativeFrame(.horizontal, count: 2, spacing: 10)
-                        }
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
-                    .scrollTargetLayout()
+                HStack(alignment: .top, spacing: 10) {
+                    ForEach(DashboardMetric.allCases) { card($0) }
                 }
-                .scrollTargetBehavior(.viewAligned)
-                .scrollIndicators(DashboardMetric.allCases.count > 2 ? .visible : .hidden)
+                .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

@@ -27,7 +27,8 @@ struct HistoryJournal: View {
     var body: some View {
         if let latest = data.checkIns.last {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Latest check-in · \(latest.day.formatted(.dateTime.month(.abbreviated).day()))")
+                Label("Latest check-in · \(latest.day.formatted(.dateTime.month(.abbreviated).day()))",
+                      systemImage: "checkmark.circle")
                     .font(.subheadline).foregroundStyle(.secondary)
                 Text(TrendsLabels.checkInSummary(latest))
                     .font(.title3.weight(.semibold)).fontDesign(.rounded)
@@ -39,10 +40,17 @@ struct HistoryJournal: View {
         }
 
         if data.hasHistoryContent {
+            Button { open(.comparison) } label: {
+                Label(HistoryDetail.comparison.title, systemImage: "chart.xyaxis.line")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 40)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .foregroundStyle(AirQStyle.onAccent)
+
             VStack(spacing: 0) {
                 row(.day, title: "View a day", symbol: "calendar")
-                Divider()
-                row(.comparison, title: HistoryDetail.comparison.title, symbol: "chart.xyaxis.line")
                 if data.hasListeningHistory {
                     Divider()
                     row(.listening, title: HistoryDetail.listening.title, symbol: "waveform")

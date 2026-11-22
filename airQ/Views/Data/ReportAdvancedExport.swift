@@ -2,10 +2,7 @@ import SwiftUI
 
 struct ReportAdvancedExport: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Advanced export")
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
+        DisclosureGroup {
             NavigationLink(value: AppRoute.export) {
                 HStack {
                     Label("Export raw records", systemImage: "archivebox")
@@ -14,7 +11,13 @@ struct ReportAdvancedExport: View {
                 }
                 .frame(minHeight: 44)
             }
+            .tint(AirQStyle.accent)
+        } label: {
+            Text("Advanced export")
+                .font(.body.weight(.semibold))
+                .frame(minHeight: 44)
         }
+        .tint(.primary)
         .airQCard()
     }
 }

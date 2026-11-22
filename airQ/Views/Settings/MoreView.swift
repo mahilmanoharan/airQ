@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct MoreView: View {
-    private let headings = ["Record a little more", "Preferences", "Your data", ""]
+    @ScaledMetric(relativeTo: .title3) private var iconSize = 36.0
+
     private func subtitle(_ route: AppRoute) -> String {
         switch route {
         case .contextEvents: "Note travel, illness or changes in routine"
@@ -15,27 +16,40 @@ struct MoreView: View {
 
     var body: some View {
         List {
-            ForEach(Array(AppRoute.menuSections.enumerated()), id: \.offset) { index, section in
-                Section {
-                    ForEach(section, id: \.self) { route in
-                        NavigationLink(value: route) {
-                            HStack(alignment: .top, spacing: 14) {
-                                Image(systemName: route.systemImage).font(.title3)
-                                    .foregroundStyle(route == .erase ? Color.red : AirQStyle.accent)
-                                    .frame(width: 26).accessibilityHidden(true)
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(route.title).font(.body.weight(.medium))
-                                    Text(subtitle(route)).font(.caption).foregroundStyle(.secondary)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                            }
-                            .padding(.vertical, 5)
-                        }
-                    }
-                } header: { Text(headings[index]) }
+            Section {
+                ForEach(AppRoute.moreMenu.actions, id: \.self, content: row)
+            }
+            Section {
+                DisclosureGroup("Data & privacy") {
+                    ForEach(AppRoute.moreMenu.privacy, id: \.self, content: row)
+                }
+                .tint(.primary)
+                .frame(minHeight: 44)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background { AirQStyle.atmosphere }
         .navigationTitle("More")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func row(_ route: AppRoute) -> some View {
+        let color = route == .erase ? Color.red : AirQStyle.accent
+        return NavigationLink(value: route) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: route.systemImage)
+                    .font(.title3)
+                    .foregroundStyle(color)
+                    .frame(width: iconSize, height: iconSize)
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(route.title).font(.body.weight(.semibold))
+                    Text(subtitle(route)).font(.subheadline).foregroundStyle(.secondary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.vertical, 5)
+        }
     }
 }

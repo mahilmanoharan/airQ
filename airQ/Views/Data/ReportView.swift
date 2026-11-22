@@ -1,16 +1,13 @@
 import SwiftUI
-import CoreTransferable
 import RespiratoryKit
-import UniformTypeIdentifiers
 
 struct ReportView: View {
     @Environment(\.historyPeriod) private var period
-    @Environment(\.setHistoryPeriod) private var setPeriod
     @Environment(\.recordRevision) private var revision
     @Environment(\.selectedTab) private var tab
+    @Environment(\.tabOpenRevision) private var tabOpenRevision
     @Environment(\.recordStore) private var records
     @Environment(\.detectionStore) private var detections
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var model: ClinicianSummaryViewModel?
     @State private var loadedKey: HistoryLoadKey?
     @State private var pdf: ReportPDF?
@@ -38,11 +35,14 @@ struct ReportView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background(AirQStyle.page)
+        .background { AirQStyle.atmosphere }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if let pdf, currentReport != nil { shareReport(pdf).airQActionBar() }
+        }
         .navigationTitle("Report")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showsPreview) {
-            ReportPreview(isPresented: $showsPreview) {
+            ReportPreview(isPresented: $showsPreview, pdf: currentReport == nil ? nil : pdf) {
                 if let report = currentReport {
                     ReportOverview(summary: report.summary)
                     ReportCoverage(summary: report.summary)
@@ -56,50 +56,39 @@ struct ReportView: View {
         .onChange(of: tab) { _, selected in
             if selected != .report { showsPreview = false }
         }
+        .onChange(of: tabOpenRevision) { showsPreview = false }
         .task(id: loadKey) { [requested = loadKey] in await loadReport(for: requested) }
         .refreshable { reload += 1 }
     }
 
     private var appointmentReport: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Prepare for an appointment")
+            Label("Report for your doctor", systemImage: "doc.text")
                 .font(.title2.weight(.semibold)).fontDesign(.rounded)
                 .accessibilityAddTraits(.isHeader)
-            periodPicker
+            HistoryPeriodPicker(title: "Report period")
+                .accessibilityIdentifier("reportPeriod")
             if let report = currentReport {
                 ReportIntroduction(summary: report.summary)
-                VStack(spacing: 10) {
-                    Button {
-                        showsPreview = true
-                    } label: {
-                        Label("Preview report", systemImage: "doc.text")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 32)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .accessibilityIdentifier("previewReport")
-                    shareReport
+                Button {
+                    showsPreview = true
+                } label: {
+                    Label("Preview report", systemImage: "doc.text.magnifyingglass")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 32)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .accessibilityIdentifier("previewReport")
+                if let pdfError {
+                    Text(pdfError)
+                    Button("Try again") { reload += 1 }.buttonStyle(.bordered)
                 }
             } else {
                 reportStatus
             }
         }
         .airQCard()
-    }
-
-    private var periodPicker: some View {
-        let picker = Picker("Report period", selection: Binding(get: { period }, set: { setPeriod($0) })) {
-            ForEach(HistoryPeriod.allCases) { Text($0.title).tag($0) }
-        }
-        return Group {
-            if typeSize.isAccessibilitySize {
-                picker.pickerStyle(.menu)
-            } else {
-                picker.pickerStyle(.segmented)
-            }
-        }
-        .accessibilityIdentifier("reportPeriod")
     }
 
     @ViewBuilder private var reportStatus: some View {
@@ -118,25 +107,18 @@ struct ReportView: View {
         }
     }
 
-    @ViewBuilder private var shareReport: some View {
-        if let pdf {
-            ShareLink(item: pdf, subject: Text("airQ Respiratory Report"),
-                      preview: SharePreview("airQ Respiratory Report")) {
-                Label("Share PDF", systemImage: "square.and.arrow.up")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 32)
-            }
-            .buttonStyle(.borderedProminent)
-            .foregroundStyle(AirQStyle.onAccent)
-            .controlSize(.large)
-            .tint(AirQStyle.accent)
-            .accessibilityIdentifier("shareReportSummary")
-        } else if let pdfError {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(pdfError)
-                Button("Try again") { reload += 1 }.buttonStyle(.bordered)
-            }
+    private func shareReport(_ pdf: ReportPDF) -> some View {
+        ShareLink(item: pdf, subject: Text("airQ Respiratory Report"),
+                  preview: SharePreview("airQ Respiratory Report")) {
+            Label("Share report", systemImage: "square.and.arrow.up")
+                .font(.headline)
+                .frame(maxWidth: .infinity, minHeight: 40)
         }
+        .buttonStyle(.borderedProminent)
+        .foregroundStyle(AirQStyle.onAccent)
+        .controlSize(.large)
+        .tint(AirQStyle.accent)
+        .accessibilityIdentifier("shareReportSummary")
     }
 
     private func loadReport(for requested: HistoryLoadKey) async {
@@ -164,15 +146,5 @@ struct ReportView: View {
             }
         }
         loadedKey = requested
-    }
-}
-
-private nonisolated struct ReportPDF: Transferable {
-    let data: Data
-    let fileName: String
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .pdf) { $0.data }
-            .suggestedFileName { $0.fileName }
     }
 }

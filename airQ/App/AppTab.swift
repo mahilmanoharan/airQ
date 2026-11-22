@@ -8,6 +8,7 @@ enum AppTab: String, Hashable, CaseIterable {
 
 extension EnvironmentValues {
     @Entry var selectedTab: AppTab = .air
+    @Entry var tabOpenRevision = 0
     @Entry var openTab: @MainActor (AppTab) -> Void = { _ in }
     @Entry var openRoute: @MainActor (AppRoute) -> Void = { _ in }
     @Entry var historyPeriod: HistoryPeriod = .month

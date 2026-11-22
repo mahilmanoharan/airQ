@@ -21,6 +21,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.apple.corespotlightitem</string>
+	</array>
 	<key>GooglePollenAPIKey</key>
 	<string>$(GOOGLE_POLLEN_API_KEY)</string>
 </dict>

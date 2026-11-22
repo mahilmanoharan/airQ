@@ -20,7 +20,8 @@ struct AnswerButton: View {
             }
             .padding(.horizontal, 16)
             .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
-            .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary), in: RoundedRectangle(cornerRadius: 14))
+            .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color(.secondarySystemGroupedBackground)),
+                        in: RoundedRectangle(cornerRadius: 14))
             .foregroundStyle(isSelected ? AnyShapeStyle(AirQStyle.onAccent) : AnyShapeStyle(.primary))
         }
         .buttonStyle(.plain)
@@ -37,11 +38,13 @@ struct SymptomChip: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 if isSelected { Image(systemName: "checkmark").font(.caption.weight(.bold)).accessibilityHidden(true) }
-                Text(title).font(.subheadline)
+                Text(title).font(.body)
             }
                 .padding(.horizontal, 14)
-                .padding(.vertical, 11)
-                .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary), in: Capsule())
+                .padding(.vertical, 8)
+                .frame(minHeight: 48)
+                .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color(.secondarySystemGroupedBackground)),
+                            in: Capsule())
                 .foregroundStyle(isSelected ? AnyShapeStyle(AirQStyle.onAccent) : AnyShapeStyle(.primary))
         }
         .buttonStyle(.plain)

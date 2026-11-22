@@ -1,5 +1,6 @@
 import SwiftUI
 import AirQualityKit
+import CoreSpotlight
 import RespiratoryKit
 import WidgetKit
 import SwiftData
@@ -48,6 +49,7 @@ private struct AppRootView: View {
     @State private var listenPath: [ListenDestination] = []
     @State private var morePath: [AppRoute]
     @State private var reportPath: [AppRoute]
+    @State private var tabOpenRevisions: [AppTab: Int] = [:]
     @State private var recordActivation = 0
     @AppStorage("historyPeriodDays") private var historyPeriod = HistoryPeriod.month
     /// Decided once per launch, so tapping "Get started" ends it even if a debug flag forced it.
@@ -82,6 +84,7 @@ private struct AppRootView: View {
                     }
                     .navigationDestination(for: AppRoute.self) { $0.destination }
                 }
+                .environment(\.tabOpenRevision, tabOpenRevisions[.air, default: 0])
                 .modifier(recordingErrorBar)
             }
             Tab("Listen", systemImage: "waveform", value: AppTab.listen) {
@@ -90,12 +93,15 @@ private struct AppRootView: View {
                     .modifier(recordingErrorBar)
             }
             Tab("History", systemImage: "chart.xyaxis.line", value: AppTab.trends) {
-                NavigationStack { AppRoute.trends.destination }.modifier(recordingErrorBar)
+                NavigationStack { AppRoute.trends.destination }
+                    .environment(\.tabOpenRevision, tabOpenRevisions[.trends, default: 0])
+                    .modifier(recordingErrorBar)
             }
             Tab("Report", systemImage: "doc.text", value: AppTab.report) {
                 NavigationStack(path: $reportPath) {
                     AppRoute.report.destination.navigationDestination(for: AppRoute.self) { $0.destination }
                 }
+                .environment(\.tabOpenRevision, tabOpenRevisions[.report, default: 0])
                 .modifier(recordingErrorBar)
             }
             Tab("More", systemImage: "ellipsis", value: AppTab.more) {
@@ -124,8 +130,12 @@ private struct AppRootView: View {
             #if DEBUG
             // Simulator verification of the Siri/Shortcuts entry, before any screen gets the store: `-runLogNoSymptoms YES`.
             if UserDefaults.standard.bool(forKey: "runLogNoSymptoms") { _ = try? await LogNoSymptomsIntent().perform() }
+            if let activity = SpotlightNavigation.testActivity(launchArgument: "uiTestSpotlightIdentifier") {
+                openSpotlightResult(activity)
+            }
             #endif
             await start()
+            await SpotlightNavigation.indexScreens()
             #if DEBUG
             // Simulator verification of the background path: `-runBackgroundRefresh YES`.
             if UserDefaults.standard.bool(forKey: "runBackgroundRefresh") { await BackgroundRefresh.run() }
@@ -134,6 +144,7 @@ private struct AppRootView: View {
         .onOpenURL { url in
             if let linked = AppRoute.path(for: url) { open(linked) }
         }
+        .onContinueUserActivity(CSSearchableItemActionType, perform: openSpotlightResult)
         .onChange(of: NavigationRouter.shared.pendingPath, initial: true) { _, pending in
             guard let pending else { return }
             open(pending)
@@ -158,6 +169,11 @@ private struct AppRootView: View {
             if phase == .background {
                 services?.cancelCollection()
                 BackgroundRefresh.schedule()
+                #if DEBUG
+                if let activity = SpotlightNavigation.testActivity(launchArgument: "uiTestSpotlightOnBackground") {
+                    openSpotlightResult(activity)
+                }
+                #endif
             }
             guard phase == .active, !isWelcoming, !AppServices.shared.isErasing else { return }
             recordActivation += 1
@@ -179,10 +195,18 @@ private struct AppRootView: View {
         RecordingErrorInset(message: isWelcoming ? nil : services?.recorder.lastError, dismissed: $dismissedError)
     }
 
-    /// A link, Siri, a control or an alert tap opens the requested screen in its tab.
-    private func open(_ linked: [AppRoute]) {
+    private func openSpotlightResult(_ activity: NSUserActivity) {
+        if let path = SpotlightNavigation.path(for: activity) { open(path, reopenTab: true) }
+    }
+
+    /// External entry points open the requested screen in its tab.
+    private func open(_ linked: [AppRoute], reopenTab: Bool = false) {
         guard !AppServices.shared.isErasing else { return }
         let destination = TabDestination(linked)
+        if reopenTab {
+            // A Spotlight shortcut can select the current tab with a detail or sheet still open.
+            tabOpenRevisions[destination.tab, default: 0] += 1
+        }
         tab = destination.tab
         switch destination.tab {
         case .air: airPath = destination.path

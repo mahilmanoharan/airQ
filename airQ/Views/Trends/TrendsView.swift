@@ -8,9 +8,9 @@ struct TrendsView: View {
     @State private var loadedKey: HistoryLoadKey?
     @State private var retry = 0
     @Environment(\.historyPeriod) private var period
-    @Environment(\.setHistoryPeriod) private var setPeriod
     @Environment(\.recordRevision) private var revision
     @Environment(\.selectedTab) private var tab
+    @Environment(\.tabOpenRevision) private var tabOpenRevision
     @Environment(\.openRoute) private var openRoute
 
     private var loadKey: HistoryLoadKey {
@@ -27,10 +27,8 @@ struct TrendsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Picker("History period", selection: Binding(get: { period }, set: { setPeriod($0) })) {
-                    ForEach(HistoryPeriod.allCases) { span in Text(span.title).tag(span) }
-                }
-                .pickerStyle(.segmented)
+                HistoryPeriodPicker(title: "History period")
+                    .accessibilityIdentifier("historyPeriod")
 
                 historyContent { data in
                     HistoryJournal(data: data) { open($0, data: data) }
@@ -40,7 +38,7 @@ struct TrendsView: View {
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background(AirQStyle.page)
+        .background { AirQStyle.atmosphere }
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $detail) { destination in
@@ -61,6 +59,7 @@ struct TrendsView: View {
             }
         }
         .onChange(of: period) { selection = nil }
+        .onChange(of: tabOpenRevision) { detail = nil }
         .task(id: loadKey) {
             let requested = loadKey
             guard requested.isActive else {

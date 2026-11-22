@@ -1,11 +1,16 @@
 import SwiftUI
 import RespiratoryKit
 
-/// Stays above the tab bar while inspecting, including when the selected chart scrolls.
+/// Uses the same date and readings in the full inspector and the chart's compact summary.
 struct TrendsSelectionSummary: View {
+    enum Presentation {
+        case day
+        case chart(close: () -> Void)
+    }
+
     let data: ChartData
     @Binding var selection: Date?
-    var close: (() -> Void)?
+    let presentation: Presentation
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var index: Int? {
@@ -16,22 +21,72 @@ struct TrendsSelectionSummary: View {
     var body: some View {
         if let index, let first = data.days.first, let last = data.days.last {
             let day = data.days[index]
-            VStack(alignment: .leading, spacing: 8) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 8) {
-                        datePicker(for: day, in: first.interval.start...last.interval.start)
-                        Spacer(minLength: 0)
-                        navigation(for: index)
+            let range = first.interval.start...last.interval.start
+            switch presentation {
+            case .day:
+                dayPage(day: day, index: index, range: range)
+            case .chart(let close):
+                VStack(alignment: .leading, spacing: 8) {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 8) {
+                            datePicker(for: day, in: range)
+                            Spacer(minLength: 0)
+                            chartNavigation(for: index, close: close)
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            datePicker(for: day, in: range)
+                            chartNavigation(for: index, close: close)
+                        }
                     }
-                    VStack(alignment: .leading, spacing: 4) {
-                        datePicker(for: day, in: first.interval.start...last.interval.start)
-                        navigation(for: index)
+                    HistoryDayValues(data: data, day: day, stacked: typeSize.isAccessibilitySize, showsCards: false)
+                }
+                .accessibilityElement(children: .contain)
+            }
+        }
+    }
+
+    private func dayPage(day: ChartData.Day, index: Int, range: ClosedRange<Date>) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(DayKeys.display(day.dayKey, style: .dateTime.weekday(.wide).month(.wide).day()))
+                        .font(.title.bold()).fontDesign(.rounded)
+                        .accessibilityAddTraits(.isHeader)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 12) { datePickerRow(for: day, in: range) }
+                        VStack(alignment: .leading, spacing: 0) { datePickerRow(for: day, in: range) }
                     }
                 }
-                HistoryDayValues(data: data, day: day, stacked: typeSize.isAccessibilitySize)
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background { AirQStyle.tintedSurface(AirQStyle.accent) }
+                HistoryDayValues(data: data, day: day, stacked: typeSize.isAccessibilitySize, showsCards: true)
             }
-            .accessibilityElement(children: .contain)
+            .padding()
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity)
         }
+        .background { AirQStyle.atmosphere }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(spacing: 6))
+                : AnyLayout(HStackLayout(spacing: 10))
+            layout {
+                dayButton("Previous day", symbol: "chevron.backward", labeled: true) { move(to: index - 1) }
+                    .disabled(index == 0)
+                dayButton("Next day", symbol: "chevron.forward", labeled: true) { move(to: index + 1) }
+                    .disabled(index == data.days.count - 1)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .airQActionBar()
+        }
+    }
+
+    @ViewBuilder private func datePickerRow(for day: ChartData.Day, in range: ClosedRange<Date>) -> some View {
+        Text("Jump to date").font(.subheadline.weight(.semibold))
+            .fixedSize(horizontal: true, vertical: false)
+        datePicker(for: day, in: range)
     }
 
     private func datePicker(for day: ChartData.Day, in range: ClosedRange<Date>) -> some View {
@@ -43,21 +98,24 @@ struct TrendsSelectionSummary: View {
             .accessibilityIdentifier("historyDayDate")
     }
 
-    private func navigation(for index: Int) -> some View {
+    private func chartNavigation(for index: Int, close: @escaping () -> Void) -> some View {
         HStack(spacing: 0) {
             dayButton("Previous day", symbol: "chevron.backward") { move(to: index - 1) }
                 .disabled(index == 0)
             dayButton("Next day", symbol: "chevron.forward") { move(to: index + 1) }
                 .disabled(index == data.days.count - 1)
-            if let close {
-                dayButton("Close day details", symbol: "xmark", action: close)
-            }
+            dayButton("Close day details", symbol: "xmark", action: close)
         }
     }
 
-    private func dayButton(_ label: String, symbol: String, action: @escaping () -> Void) -> some View {
+    private func dayButton(_ label: String, symbol: String, labeled: Bool = false,
+                           action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            if labeled {
+                Label(label, systemImage: symbol).frame(maxWidth: .infinity, minHeight: 38)
+            } else {
+                Image(systemName: symbol).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            }
         }
         .accessibilityLabel(label)
     }
@@ -72,6 +130,7 @@ private struct HistoryDayValues: View {
     let data: ChartData
     let day: ChartData.Day
     let stacked: Bool
+    let showsCards: Bool
 
     private var checkIn: ChartData.CheckInPoint? {
         data.checkIns.first { $0.day == day.interval.start }
@@ -83,21 +142,31 @@ private struct HistoryDayValues: View {
             ?? (checkIn == nil ? "No check-in" : "Not answered")
         let pollen = data.pollen.lazy.filter { $0.day == day.interval.start }.map(\.upi).max()
         let columns = Array(repeating: GridItem(.flexible(), spacing: 16, alignment: .topLeading), count: stacked ? 1 : 2)
-        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
-            metric("Symptoms", id: "symptoms", value: symptomsText(for: checkIn))
-            metric("Rescue inhaler", id: "rescue", value: inhaler)
-            metric("Highest saved AQI", id: "air", value: airQuality())
-            metric("Pollen forecast", id: "pollen", value: pollen.map { "\($0) of 5" } ?? "No pollen forecast")
+        LazyVGrid(columns: columns, alignment: .leading, spacing: showsCards ? 12 : 8) {
+            metric("Symptoms", id: "symptoms", symbol: "heart.text.clipboard", value: symptomsText(for: checkIn))
+            metric("Rescue inhaler", id: "rescue", symbol: "cross.case", value: inhaler)
+            metric("Highest saved AQI", id: "air", symbol: "wind", value: airQuality())
+            metric("Pollen forecast", id: "pollen", symbol: "leaf", value: pollen.map { "\($0) of 5" } ?? "No pollen forecast")
         }
     }
 
-    private func metric(_ title: String, id: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
-            Text(value).font(.subheadline.weight(.medium))
+    private func metric(_ title: String, id: String, symbol: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: showsCards ? 6 : 2) {
+            if showsCards {
+                Label(title, systemImage: symbol).font(.subheadline.weight(.semibold))
+            } else {
+                Text(title).font(.caption).foregroundStyle(.secondary)
+            }
+            Text(value).font(showsCards ? .body : .subheadline.weight(.medium))
         }
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(showsCards ? 14 : 0)
+        .background {
+            if showsCards {
+                RoundedRectangle(cornerRadius: 18).fill(Color(.secondarySystemGroupedBackground))
+            }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
         .accessibilityValue(value)

@@ -59,12 +59,7 @@ struct HistoryDetailPage: View {
     }
 
     private var dayDetails: some View {
-        ScrollView {
-            TrendsSelectionSummary(data: data, selection: $selection)
-                .padding()
-                .frame(maxWidth: 720)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        TrendsSelectionSummary(data: data, selection: $selection, presentation: .day)
     }
 
     private var comparison: some View {
@@ -99,7 +94,9 @@ struct HistoryDetailPage: View {
                     .buttonStyle(.bordered)
                     .controlSize(.large)
                 } else {
-                    TrendsSelectionSummary(data: data, selection: $selection, close: { self.selection = nil })
+                    TrendsSelectionSummary(data: data, selection: $selection, presentation: .chart {
+                        self.selection = nil
+                    })
                 }
             }
             .padding(.horizontal).padding(.vertical, 8)

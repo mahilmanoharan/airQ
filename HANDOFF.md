@@ -1,14 +1,35 @@
-# airQ handoff (current state, branch `cook`, 2026-11-18)
+# airQ handoff (current state, branch `cook`, 2026-11-21)
 
 Local feature commits and publishing `cook` to GitHub are authorized by the user; **do not merge with or change main**. The chronological notes and per-round review reasoning are archived in `docs/handoff-history.md`; this file is the current picture. Build **4** (SchemaV3 + check-in question set 2).
 
+## Visual hierarchy and controls
+
+- Today uses reading-level tints and a filled daily check-in action. Save changes the card to a quieter “View your check-in” treatment. Air quality sharing moved to the Air quality detail toolbar.
+- Air quality and Pollen details start with the place, the reading and its meaning. Air quality marks older readings as **Last saved**. **See AQI scale** and **See pollen scale** open the reference without scrolling through charts. Missing pollen leaves the scale without a selected level.
+- Seven targeted dashboard UI tests passed. They cover both scales, stale AQI, unavailable pollen, and the pollutant, station, sharing, and history controls. The AQI detail and scale were visually checked on iPhone 17 Pro / iOS 26.4. The simulator is open on the Air quality detail with sample data.
+- Listen keeps Start listening, Stop listening, and the active microphone indicator above the tab bar. The waveform pulses during capture when Reduce Motion is off. The session archive and tools are secondary, with live classifier details under **Sound details**.
+- History puts **Compare with air & pollen** above the day and listening views. Report keeps **Share report** above the tab bar when its current PDF is ready. **Advanced export** opens on demand.
+- **View a day** shows the selected date, a **Jump to date** calendar, and separate cards for symptoms, rescue inhaler, saved AQI, and pollen. Labeled **Previous day** and **Next day** stay below the scrolling cards and share the chart's selected date.
+- Five targeted History UI tests passed on iPhone 17 Pro / iOS 26.4. Coverage includes pinned day buttons at the largest text size, missing data versus zero inhaler uses, comparison navigation, shared report periods, and reopening History from Spotlight.
+- Check-in shows the question number and keeps **Next**, **Skip**, and **Save** in the same bottom action area. The saved view keeps **Done** at the bottom and links to History. More keeps Life events and Air quality alerts visible and puts the maintenance tools under **Data & privacy**.
+- The Check-in and More follow-up passed eight targeted tests across runs. Coverage includes large-text saving, resuming a draft, the main accessibility audit, and erasing from More. The simulator is open on the first question with sample data.
+- Twelve targeted UI tests passed across the usability runs, including both accessibility audits. The final run checked that Share stays at the same height after scrolling at the largest text size and that it opens the system share sheet. The four updated screens were visually checked on iPhone 17 Pro / iOS 26.4. Real microphone capture remains a device check.
+
+## Apple framework additions
+
+- `SpotlightNavigation` indexes four static shortcuts for Today, Check-in, History, and Report on a normal launch. It accepts only those item IDs and uses the usual tab routing. A new selection dismisses an open Today metric, History detail, or Report preview on the target tab. The index has no personal readings, check-ins, or reports.
+- **Preview report → View print layout** uses PDFKit to show the same in-memory PDF as **Share report**. The native view supports zoom, and its share action offers Print. The layout closes if the report changes or becomes unavailable.
+- Eight targeted UI tests passed on iPhone 17 Pro / iOS 26.4. They cover the four Spotlight routes, rejection of an unknown ID, reopening screens over detail views, PDF printing, erase invalidation, large text, deep links, and draft retention. A normal launch registered the shortcuts with the simulator. Selecting the indexed airQ Report result from Home Screen search opened Report. The 90-day sample PDF rendered on one page and zoomed on double-tap.
+
 ## Today, History and printable Report redesign
 
-- Today shows location, reading time, and AQI and pollen in a horizontal strip that stacks at accessibility text sizes. Meaning is inline. Tapping a reading card zooms into its details and scale. Tomorrow’s forecast precedes the check-in invitation. The reading and action cards have no side arrows.
+- Today shows the place, reading time, and plain-language air and pollen levels before the index numbers. The cards sit side by side without horizontal scrolling and stack from the system's XX Large text size. Each card says “See details.” The check-in card comes before tomorrow’s forecast.
 - A new check-in zooms into the question flow after the model confirms there is no saved entry. Existing entries and unavailable record state route through the check-in hub. The first question says “Answer as much as you like.”
+- The welcome action stays at the bottom while the introduction scrolls. Check-in symptom buttons and Back have larger tap areas. Listen provides full-width Start and Stop controls. History and Report share an adaptive period picker that uses a menu from XX Large text size.
 - **Listen** is the second tab and the in-app entry point for capture. `airq://listen` opens the root of its navigation stack, including when a listening tool was open. **Start listening** begins capture. Leaving the tab ends capture, and erasing the record clears the listening stack and live results.
 - History leads with the latest check-in. **View a day** opens a calendar and day-by-day details. **Compare with air & pollen** opens the aligned charts, and **Listening history** appears when there is listening data or a session in the selected period, including an interrupted session with no sound window.
-- Report shows the period, a plain-language summary, and **Preview report** and **Share PDF**. The preview contains clinical measures, coverage, weekly rows, and the plain-text summary. The one-page US Letter PDF is generated in memory and omits free-text life-event notes. Raw export remains under Advanced.
+- Report shows the period, a plain-language summary, and **Preview report** and **Share report**. The preview contains clinical measures, coverage, weekly rows, and the plain-text summary. The one-page US Letter PDF is generated in memory and omits free-text life-event notes. Raw export remains under Advanced.
+- The November 21 usability pass passed 14 targeted UI tests on iPhone 17 Pro / iOS 26.4. These included both accessibility audits, the large-text period menu shared by History and Report, check-in saving, first launch, and printing. The app changes are local. The architecture rewrite was pushed first as `7b2406e`.
 - At the publishing checkpoint, both package suites passed (121 AirQualityKit, 198 RespiratoryKit) along with all 10 targeted UI tests on iPhone 17 Pro / iOS 26.4 (`/tmp/airq-cook-listen-single-entry.xcresult`). These covered the single Listen entry, past sessions, deep links, Today card navigation, check-in draft retention, History day details and life events, linked History/Report periods, and the PDF’s Print option. Prior runs covered both accessibility audit groups, Today’s large text sizing, Report preview, and erase invalidation. A sample 90-day PDF was visually checked on one page.
 - The build emits three existing SwiftUI `@Entry` closure comparison warnings in `AppTab.swift`. Real microphone capture still needs a device check.
 

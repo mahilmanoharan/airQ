@@ -19,13 +19,12 @@ enum AppRoute: String, Hashable, CaseIterable {
         }
     }
 
-    /// The More tab's grouping: noting life events, managing the record, settings/about, and erasing.
-    static let menuSections: [[AppRoute]] = {
-        let sections: [[AppRoute]] = [[.contextEvents], [.alerts], [.records, .about], [.erase]]
-        let tabs = Set(allCases.filter { $0.tab != .more })
-        assert(Set(sections.joined()).union(tabs) == Set(allCases) && sections.joined().allSatisfy { $0.tab == .more },
-               "Every AppRoute assigned to More must appear in a More section")
-        return sections
+    static let moreMenu: (actions: [AppRoute], privacy: [AppRoute]) = {
+        let actions: [AppRoute] = [.contextEvents, .alerts]
+        let privacy: [AppRoute] = [.records, .about, .erase]
+        assert(Set(actions + privacy) == Set(allCases.filter { $0.tab == .more }),
+               "Every More route must appear in the menu")
+        return (actions, privacy)
     }()
 
     var systemImage: String {

@@ -5,6 +5,21 @@ enum AirQStyle {
     static let accent = Color("AccentColor")
     static let onAccent = Color("AccentContent")
     static let page = Color(.systemGroupedBackground)
+
+    static var atmosphere: some View {
+        LinearGradient(colors: [accent.opacity(0.10), .clear], startPoint: .topTrailing, endPoint: .bottomLeading)
+            .background(page)
+            .ignoresSafeArea()
+    }
+
+    static func tintedSurface(_ color: Color) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 24)
+        return shape.fill(Color(.secondarySystemGroupedBackground))
+            .overlay {
+                shape.fill(LinearGradient(colors: [color.opacity(0.20), color.opacity(0.05)],
+                                          startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
+    }
 }
 
 struct AirQPageHeader: View {
@@ -27,6 +42,14 @@ struct AirQPageHeader: View {
 }
 
 extension View {
+    func airQActionBar() -> some View {
+        frame(maxWidth: 720)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(.bar)
+    }
+
     func airQCard() -> some View {
         padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)

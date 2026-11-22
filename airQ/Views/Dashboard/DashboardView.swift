@@ -4,6 +4,7 @@ import AirQualityKit
 struct DashboardView: View {
     let model: DashboardViewModel
     @Environment(\.openURL) private var openURL
+    @Environment(\.tabOpenRevision) private var tabOpenRevision
     @Namespace private var readingTransition
     /// False until the first load has finished, so "no reading yet" isn't flashed before it starts.
     @State private var hasAttemptedLoad = false
@@ -14,7 +15,7 @@ struct DashboardView: View {
         if model.errorIsRecoverableInSettings, let settings = URL(string: UIApplication.openSettingsURLString) {
             Button("Open Settings") { openURL(settings) }
         } else {
-            Button("Retry") { Task { await model.load(forceRefresh: true) } }
+            Button("Try again") { Task { await model.load(forceRefresh: true) } }
                 .disabled(model.isLoading)
         }
     }
@@ -32,7 +33,6 @@ struct DashboardView: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
-                    TomorrowCard(snapshot: snapshot)
                 } else if let message = model.errorMessage {
                     ContentUnavailableView {
                         Label("Unable to update", systemImage: "exclamationmark.triangle")
@@ -54,12 +54,15 @@ struct DashboardView: View {
                     }
                 }
                 TodayCheckInCard()
+                if let snapshot = model.snapshot {
+                    TomorrowCard(snapshot: snapshot)
+                }
             }
             .padding()
             .frame(maxWidth: 720)
             .frame(maxWidth: .infinity)
         }
-        .background(backgroundColor.ignoresSafeArea())
+        .background { AirQStyle.atmosphere }
         .navigationTitle("Today")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $openedMetric) { metric in
@@ -72,6 +75,7 @@ struct DashboardView: View {
             }
         }
         .onChange(of: AppServices.shared.eraseRevision) { openedMetric = nil }
+        .onChange(of: tabOpenRevision) { openedMetric = nil }
         .task {
             await model.load()
             hasAttemptedLoad = true
@@ -89,17 +93,7 @@ struct DashboardView: View {
         .refreshable { await model.load(forceRefresh: true) }
         .toolbar {
             if model.isLoading, model.snapshot != nil { ProgressView() }
-            if let snapshot = model.snapshot {
-                ShareLink(item: AirQualitySummary.sentence(for: snapshot)) {
-                    Image(systemName: "square.and.arrow.up")
-                }
-                .accessibilityLabel("Share air quality")
-            }
         }
-    }
-
-    private var backgroundColor: Color {
-        AirQStyle.page
     }
 }
 
@@ -113,7 +107,7 @@ private struct UpdateFailedBanner<Action: View>: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.orange)
             Text(message).font(.footnote).foregroundStyle(.secondary)
-            action().font(.footnote.weight(.semibold))
+            action().buttonStyle(.bordered).controlSize(.large)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
