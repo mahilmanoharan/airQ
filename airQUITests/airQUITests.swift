@@ -559,6 +559,26 @@ final class AirQUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Sessions"].waitForExistence(timeout: 5))
     }
 
+    func testEmptyListeningSessionsKeepsTheDateRangeUsableAtTheLargestTextSize() {
+        let app = launch(route: "listen", extraArguments: [
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"
+        ])
+        let sessions = app.buttons["Past listening sessions"]
+        reveal(sessions, in: app)
+        sessions.tap()
+
+        let emptyState = app.staticTexts["No listening sessions in this range"]
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 5))
+        let range = app.buttons.containing(NSPredicate(format: "label CONTAINS %@", "Last 7 days")).firstMatch
+        XCTAssertTrue(range.isHittable)
+        range.tap()
+        app.buttons["All history"].tap()
+
+        let allHistory = app.buttons.containing(NSPredicate(format: "label CONTAINS %@", "All history")).firstMatch
+        XCTAssertTrue(allHistory.isHittable)
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 5))
+    }
+
     /// Xcode's own accessibility audit (contrast, hit-region size, clipped or truncated text, missing
     /// descriptions) over the screens people use most. Findings are reported per screen.
     func testAccessibilityAuditOnMainScreens() throws {
